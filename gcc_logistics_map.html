@@ -395,7 +395,7 @@ function showTip(evt, inst, gccColor) {
     ${inst.contractors.map(c=>`
       <div class="gt-c"><div class="gt-cd" style="background:${c.color}"></div>
         <div style="flex:1;min-width:0">
-          <div><span style="font-weight:500">${c.name.split("(")[0].trim()}</span> <span style="color:var(--muted)">· ${c.vehicle.split("—")[0].trim()}</span>${c.ceiling?`<span style="margin-left:6px;font-family:var(--mono);font-size:9px;font-weight:500;color:${c.ceiling.startsWith("$")&&!c.ceiling.includes("TO")&&!c.ceiling.includes("task")&&!c.ceiling.includes("Task")?"#7ab3ff":"var(--muted)"}">${c.ceiling}</span>`:""}</div>
+          <div><span style="font-weight:500">${c.name.split("(")[0].trim()}</span> <span style="color:var(--muted)">· ${c.vehicle.split("—")[0].trim()}</span>${c.ceiling?`<span style="margin-left:6px;font-family:var(--mono);font-size:9px;font-weight:600;color:${c.ceiling.startsWith("$")?"#7ab3ff":"var(--muted)"};background:rgba(255,255,255,0.07);padding:1px 5px;border-radius:3px">${c.ceiling}</span>`:""}</div>
           ${c.scope?`<div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:3px;line-height:1.45">${c.scope}</div>`:""}
         </div>
       </div>`).join("")}
@@ -482,7 +482,8 @@ function buildSection(gcc, worldTopo, usTopo) {
     row.className = "inst-row"; row.dataset.id = inst.name;
     const tags = inst.contractors.map(c=>{
       const isKnown = c.ceiling && c.ceiling.startsWith("$");
-      return `<span class="tag" style="background:${c.color}22;color:${c.color}"><span class="tag-dot" style="background:${c.color}"></span>${c.name.split(" ")[0]}${isKnown?` <span style="opacity:0.7">${c.ceiling}</span>`:""}</span>`;
+      const ceilStr = c.ceiling && c.ceiling !== "Task order" && c.ceiling !== "Seasonal TO" ? c.ceiling : (c.ceiling ? c.ceiling : "");
+      return `<span class="tag" style="background:${c.color}22;color:${c.color}"><span class="tag-dot" style="background:${c.color}"></span>${c.name.split(" ")[0]}${ceilStr?` <span style="opacity:${isKnown?'0.9':'0.5'};font-size:9px">${ceilStr}</span>`:""}</span>`;
     }).join("");
     const pill = inst.recompete ? `<span class="recomp-pill">⚠ ${inst.recompete.expires}</span>` : "";
     row.innerHTML = `
@@ -604,9 +605,9 @@ function selectInst(gcc, inst, rowEl, infoDiv) {
     ${inst.contractors.map(c=>{
       const isLarge = c.ceiling && c.ceiling.startsWith("$") && !c.ceiling.includes("TO") && !c.ceiling.includes("task") && !c.ceiling.includes("Task") && !c.ceiling.includes("od");
       return `<div class="gd-row">
-        <div style="display:flex;align-items:start;justify-content:space-between;gap:8px;margin-bottom:3px">
+        <div style="display:flex;align-items:start;justify-content:space-between;gap:8px;margin-bottom:2px">
           <div class="gd-cname" style="color:${c.color}">${c.name}</div>
-          ${c.ceiling ? `<span style="font-family:var(--mono);font-size:11px;font-weight:500;color:${isLarge?"#7ab3ff":"var(--muted)"};white-space:nowrap;flex-shrink:0">${c.ceiling}</span>` : ""}
+          ${c.ceiling ? `<span style="font-family:var(--mono);font-size:11px;font-weight:600;color:${isLarge?"#7ab3ff":c.ceiling==="TBD"?"var(--orange)":"var(--muted)"};white-space:nowrap;flex-shrink:0;padding:1px 6px;background:rgba(255,255,255,0.06);border-radius:3px">${c.ceiling}</span>` : ""}
         </div>
         <div class="gd-role" style="margin-bottom:${c.scope?'5px':'0'}">${c.vehicle}</div>
         ${c.scope ? `<div style="font-size:10px;color:var(--text);line-height:1.55;padding:6px 8px;background:rgba(255,255,255,0.04);border-radius:4px;border-left:2px solid ${c.color}40">${c.scope}</div>` : ""}
