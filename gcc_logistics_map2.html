@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GCC Logistics Intelligence — LOGCAP V & EAGLE II Global</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #111827;
+  --surface: #1a2235;
+  --elevated: #222d45;
+  --border: rgba(255,255,255,0.10);
+  --border-hi: rgba(255,255,255,0.22);
+  --text: #e8edf8;
+  --muted: #8892b0;
+  --dim: #3a4560;
+  --orange: #ff6b35;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'IBM Plex Sans', sans-serif;
+  --northcom: #4d82ff;
+  --eucom:    #3ec98a;
+  --indopacom:#a07cf4;
+  --centcom:  #f0a830;
+  --africom:  #f05a5a;
+  --southcom: #2eccd6;
+}
+html { font-family: var(--sans); background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
+body { overflow-x: hidden; }
+
+/* ── NAV ── */
+.top-nav {
+  position: sticky; top: 0; z-index: 1000;
+  background: rgba(18,28,48,0.97); backdrop-filter: blur(10px);
+  border-bottom: 0.5px solid var(--border-hi);
+  padding: 0 20px;
+  display: flex; align-items: center; gap: 0; overflow-x: auto;
+}
+.nav-brand { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); padding: 14px 16px 14px 0; border-right: 0.5px solid var(--border); margin-right: 12px; white-space: nowrap; flex-shrink: 0; }
+.nav-link { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding: 14px 14px; cursor: pointer; transition: color 0.15s; border-bottom: 2px solid transparent; white-space: nowrap; flex-shrink: 0; text-decoration: none; display: block; }
+.nav-link:hover { color: var(--text); }
+.nav-link.active { color: var(--text); }
+
+/* ── SECTION ── */
+.gcc-section { min-height: 100vh; display: flex; flex-direction: row; border-bottom: 1px solid var(--border); align-items: flex-start; }
+@media (max-width: 899px) { .gcc-section { flex-direction: column; align-items: stretch; } }
+
+/* ── MAP ── */
+.gcc-map { flex: 1; position: relative; background: #0e1525; min-height: 100vh; align-self: stretch; }
+@media (max-width: 899px) { .gcc-map { min-height: 55vh; } }
+.gcc-map svg { width: 100%; height: 100%; display: block; }
+
+.gcc-label {
+  position: absolute; top: 14px; left: 14px;
+  background: rgba(14,21,37,0.92); backdrop-filter: blur(6px);
+  border-radius: 6px; padding: 8px 12px;
+  border-left: 3px solid var(--gcc-color, #4d82ff);
+}
+.gcc-label-eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.7); margin-bottom: 3px; }
+.gcc-label-name { font-size: 18px; font-weight: 600; color: var(--gcc-color, #4d82ff); }
+.gcc-label-prime { font-family: var(--mono); font-size: 12px; color: rgba(255,255,255,0.75); margin-top: 3px; }
+
+/* Map legend chip */
+.map-legend {
+  position: absolute; bottom: 14px; left: 14px;
+  background: rgba(14,21,37,0.90); backdrop-filter: blur(6px);
+  border: 0.5px solid var(--border-hi); border-radius: 6px; padding: 8px 12px;
+  display: flex; flex-direction: column; gap: 5px;
+}
+.ml-item { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 11px; color: #ffffff; }
+.ml-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.ml-sq { width: 8px; height: 8px; border-radius: 1px; border: 1.5px dashed var(--orange); flex-shrink: 0; }
+
+/* ── INFO PANEL ── */
+.gcc-info { width: 340px; flex-shrink: 0; height: 100vh; background: var(--surface); border-left: 0.5px solid var(--border); overflow-y: auto; display: flex; flex-direction: column; position: sticky; top: 47px; align-self: flex-start; max-height: calc(100vh - 47px); }
+@media (max-width: 899px) { .gcc-info { width: 100%; height: auto; max-height: none; border-left: none; border-top: 0.5px solid var(--border); position: static; align-self: auto; } }
+
+.gcc-info-head { padding: 14px 16px 10px; border-bottom: 0.5px solid var(--border); flex-shrink: 0; }
+.gcc-info-title { font-size: 14px; font-weight: 500; }
+.gcc-info-sub { font-family: var(--mono); font-size: 9px; color: var(--muted); margin-top: 3px; }
+
+.gcc-stats { display: grid; grid-template-columns: repeat(3,1fr); border-bottom: 0.5px solid var(--border); flex-shrink: 0; }
+.gs { padding: 8px 12px; border-right: 0.5px solid var(--border); }
+.gs:last-child { border-right: none; }
+.gs-v { font-size: 16px; font-weight: 300; }
+.gs-l { font-family: var(--mono); font-size: 8px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; margin-top: 1px; }
+
+.gcc-inst-list { flex: 1; overflow-y: auto; }
+.gcc-inst-list::-webkit-scrollbar { width: 2px; }
+.gcc-inst-list::-webkit-scrollbar-thumb { background: var(--dim); }
+
+.inst-row { padding: 10px 14px; border-bottom: 0.5px solid var(--border); cursor: pointer; transition: background 0.1s; }
+.inst-row:hover { background: var(--elevated); }
+.inst-row.sel { background: var(--elevated); border-left: 2px solid var(--gcc-color, #4d82ff); padding-left: 12px; }
+.ir-name { font-size: 12px; font-weight: 500; margin-bottom: 2px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.ir-meta { font-family: var(--mono); font-size: 9px; color: var(--muted); }
+.ir-tags { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 5px; }
+.tag { display: inline-flex; align-items: center; gap: 3px; font-family: var(--mono); font-size: 8px; font-weight: 500; padding: 2px 6px; border-radius: 99px; }
+.tag-dot { width: 4px; height: 4px; border-radius: 50%; }
+.recomp-pill { font-family: var(--mono); font-size: 8px; font-weight: 500; padding: 1px 6px; border-radius: 99px; background: rgba(255,107,53,0.18); color: var(--orange); border: 0.5px solid rgba(255,107,53,0.4); white-space: nowrap; }
+
+.gcc-detail { padding: 14px; flex-shrink: 0; border-top: 0.5px solid var(--border); display: none; }
+.gcc-detail.show { display: block; }
+.gd-name { font-size: 13px; font-weight: 500; margin-bottom: 2px; }
+.gd-meta { font-family: var(--mono); font-size: 9px; color: var(--muted); margin-bottom: 10px; }
+.gd-recomp { margin-bottom: 10px; padding: 8px 10px; background: rgba(255,107,53,0.15); border: 0.5px solid rgba(255,107,53,0.35); border-radius: 5px; }
+.gd-recomp-title { font-family: var(--mono); font-size: 8px; color: var(--orange); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
+.gd-recomp-body { font-size: 10px; color: var(--text); line-height: 1.5; font-family: var(--mono); }
+.gd-sec-h { font-family: var(--mono); font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); border-bottom: 0.5px solid var(--border); padding-bottom: 3px; margin-bottom: 6px; }
+.gd-row { padding: 6px 0; border-bottom: 0.5px solid var(--border); }
+.gd-row:last-child { border-bottom: none; }
+.gd-cname { font-size: 11px; font-weight: 500; }
+.gd-role { font-size: 10px; color: var(--muted); font-family: var(--mono); line-height: 1.4; margin-top: 2px; }
+.gd-close { float: right; background: none; border: 0.5px solid var(--border-hi); color: var(--muted); font-size: 11px; width: 20px; height: 20px; border-radius: 3px; cursor: pointer; }
+
+/* ── DOT ANIMATIONS ── */
+/* Active site — intense triple pulse */
+@keyframes pa { 0%{r:7;opacity:1} 60%{opacity:.6} 100%{r:40;opacity:0} }
+@keyframes pb { 0%{r:7;opacity:.7} 60%{opacity:.4} 100%{r:28;opacity:0} }
+@keyframes pc { 0%{r:7;opacity:.4} 100%{r:18;opacity:0} }
+@keyframes core-pulse { 0%,100%{opacity:1} 50%{opacity:.6} }
+.ring1 { fill:none; stroke-width:2; animation:pa 2.2s ease-out infinite; }
+.ring2 { fill:none; stroke-width:1.5; animation:pb 2.2s ease-out infinite .55s; }
+.ring3 { fill:none; stroke-width:1; animation:pc 2.2s ease-out infinite 1.1s; }
+.core  { animation:core-pulse 2.2s ease-in-out infinite; }
+
+/* Recompete — intense dashed orange triple pulse */
+@keyframes rp  { 0%{r:8;opacity:1} 60%{opacity:.6} 100%{r:44;opacity:0} }
+@keyframes rp2 { 0%{r:8;opacity:.6} 100%{r:30;opacity:0} }
+.ring-recomp  { fill:none; stroke-width:2; stroke-dasharray:5,3; animation:rp  2.8s ease-out infinite; }
+.ring-recomp2 { fill:none; stroke-width:1.5; stroke-dasharray:3,4; animation:rp2 2.8s ease-out infinite .7s; }
+
+.core { transition:r .15s; }
+.idot:hover .core { r:8; }
+.idot.sel .core { r:9; }
+.ilabel { font-family:'IBM Plex Mono',monospace; font-size:14px; fill:#ffffff; pointer-events:none; }
+
+/* Tooltip */
+.gtip { position:fixed; background:var(--elevated); border:0.5px solid var(--border-hi); border-radius:7px; padding:9px 11px; pointer-events:none; opacity:0; transition:opacity .12s; max-width:360px; z-index:500; box-shadow:0 8px 30px rgba(0,0,0,.8); font-size:11px; }
+.gtip.show { opacity:1; }
+.gt-name { font-size:12px; font-weight:500; margin-bottom:2px; }
+.gt-sub { font-family:var(--mono); font-size:9px; color:var(--muted); margin-bottom:5px; }
+.gt-c { display:flex; align-items:center; gap:5px; padding:1px 0; }
+.gt-cd { width:5px; height:5px; border-radius:50%; flex-shrink:0; }
+.gt-recomp { margin-top:6px; padding:4px 7px; background:rgba(255,107,53,0.15); border:0.5px solid rgba(255,107,53,0.35); border-radius:4px; font-family:var(--mono); font-size:9px; color:var(--orange); }
+
+.map-load { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-family:var(--mono); font-size:14px; color:#ffffff; }
+
+/* Ceiling badges */
+.ceil-badge { display:inline-block; font-family:var(--mono); font-size:9px; font-weight:500; padding:2px 7px; border-radius:3px; background:rgba(255,255,255,0.07); color:var(--text); white-space:nowrap; }
+.ceil-badge.known { background:rgba(77,130,255,0.15); color:#7ab3ff; }
+.ceil-badge.large { background:rgba(240,168,48,0.15); color:#f0c060; }
+.ceil-badge.recomp { background:rgba(255,107,53,0.15); color:#ff8c60; }
+
+/* GCC total ceiling strip */
+.gcc-ceiling-strip { padding:8px 14px; background:rgba(0,0,0,0.15); border-bottom:0.5px solid var(--border); flex-shrink:0; display:flex; align-items:center; justify-content:space-between; }
+.gcs-label { font-family:var(--mono); font-size:8px; text-transform:uppercase; letter-spacing:0.1em; color:var(--muted); }
+.gcs-value { font-family:var(--mono); font-size:13px; font-weight:500; }
+
+/* Global legend footer */
+.global-legend { padding:16px 20px; background:var(--surface); border-top:0.5px solid var(--border); display:flex; flex-wrap:wrap; gap:16px; align-items:center; }
+.gl-item { display:flex; align-items:center; gap:6px; font-family:var(--mono); font-size:9px; color:var(--muted); }
+.gl-dot { width:8px; height:8px; border-radius:50%; }
+.gl-sq { width:8px; height:8px; border-radius:1px; border:1.5px dashed var(--orange); }
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <div class="nav-brand">GCC Logistics Intel</div>
+  <a class="nav-link active" href="#northcom">NORTHCOM</a>
+  <a class="nav-link" href="#eucom">EUCOM</a>
+  <a class="nav-link" href="#indopacom">INDOPACOM</a>
+  <a class="nav-link" href="#centcom">CENTCOM</a>
+  <a class="nav-link" href="#africom">AFRICOM</a>
+  <a class="nav-link" href="#southcom">SOUTHCOM</a>
+</nav>
+
+<div id="gtip" class="gtip"></div>
+<div id="sections"></div>
+
+<div class="global-legend">
+  <div class="gl-item"><div class="gl-dot" style="background:var(--northcom)"></div>NORTHCOM — KBR + EAGLE II</div>
+  <div class="gl-item"><div class="gl-dot" style="background:var(--eucom)"></div>EUCOM — KBR</div>
+  <div class="gl-item"><div class="gl-dot" style="background:var(--indopacom)"></div>INDOPACOM — V2X</div>
+  <div class="gl-item"><div class="gl-dot" style="background:var(--centcom)"></div>CENTCOM — V2X</div>
+  <div class="gl-item"><div class="gl-dot" style="background:var(--africom)"></div>AFRICOM — Fluor</div>
+  <div class="gl-item"><div class="gl-dot" style="background:var(--southcom)"></div>SOUTHCOM — Amentum</div>
+  <div class="gl-item"><div class="gl-sq"></div>Recompete / open solicitation / unconfirmed</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+<script>
+// recompete field: { incumbent, ceiling, expires, notes }
+const GCCS = [
+  {
+    id:"northcom", name:"U.S. Northern Command", short:"NORTHCOM", hq:"Peterson SFB, CO",
+    prime:"KBR (LOGCAP V) + Multiple (EAGLE II BOA)", color:"#4d82ff", mapType:"usa",
+    stats:{ sites:25, contractors:11, vehicle:"EAGLE II + LOGCAP V", recompetes:12 },
+    installations:[
+      { name:"Fort Cavazos", country:"TX", lat:31.14, lng:-97.78,
+        recompete:{ incumbent:"Akima Support Operations", ceiling:"$101M", expires:"Aug 2025", notes:"EAGLE II recompete imminent. Largest NORTHCOM LRC by value — 11 offerors competed on prior award." },
+        contractors:[{name:"Akima ASO",color:"#2eccd6",vehicle:"EAGLE II — LRC maint, supply, ammo, transport",scope:"Materiel maintenance on tactical/non-tactical vehicles & equipment; ammunition supply point (ASP) operations; central issue facility (CIF); retail & wholesale supply; transportation motor pool; 1st Cav Div, III Corps, and tenant unit support",ceiling:"$101M"},{name:"KBR",color:"#f0a830",vehicle:"LOGCAP V — life support, contingency ops",scope:"Base life support including food service, billeting, facility maintenance, power generation, water operations, and contingency surge capacity for NORTHCOM exercises",ceiling:"$771M opt."}]},
+      { name:"Fort Bliss", country:"TX", lat:31.85, lng:-106.42,
+        recompete:{ incumbent:"Incumbent unknown", ceiling:"TBD", expires:"Open solicitation", notes:"EAGLE solicitation W519TC-25-R-0007 issued May 2025 for Fort Bliss LRC maintenance, supply & transportation. Submission deadline April 2025 (amended twice). No award publicly announced. Fort Bliss is the largest FORSCOM installation — this is a significant open opportunity. KBR holds separate LOGCAP V task order for contingency/life support." },
+        contractors:[{name:"EAGLE LRC — open solicitation",color:"#ff6b35",vehicle:"EAGLE — W519TC-25-R-0007 solicited May 2025, award pending",scope:"Full LRC scope solicited: materiel maintenance (tactical/non-tactical vehicles & equipment), retail/wholesale supply support, ammunition supply point, CIF, and transportation motor pool for 1st Armored Division and Fort Bliss tenant units; largest FORSCOM installation by acreage",ceiling:"TBD"},{name:"KBR",color:"#f0a830",vehicle:"LOGCAP V — life support, border mission support",scope:"Logistics and life support for Army border security mission rotational forces; food service, billeting, equipment readiness, and supply chain for 1AD and rotational units",ceiling:"Task order"}]},
+      { name:"Fort Riley", country:"KS", lat:39.06, lng:-96.78,
+        contractors:[{name:"Marton Technologies",color:"#a07cf4",vehicle:"EAGLE II — LRC maintenance, supply & transportation",scope:"Materiel maintenance (tactical & non-tactical vehicles/equipment); SSA retail supply; CIF operations; transportation motor pool management; ammunition supply point support",ceiling:"Undisclosed"},{name:"KBR",color:"#f0a830",vehicle:"LOGCAP V — Warfighter exercise support",scope:"Exercise logistics support including rapid deployment of life support infrastructure, range maintenance, training area sustainment, and food service for rotational training units",ceiling:"Task order"}]},
+      { name:"Fort Carson", country:"CO", lat:38.74, lng:-104.79,
+        contractors:[{name:"Sunik/Akima",color:"#2eccd6",vehicle:"EAGLE II — LRC maint, supply & transport — 4th ID (~350 FTE)",scope:"Full LRC services for 4th Infantry Division: vehicle/equipment maintenance, SSA retail supply, CIF, ASP, transportation motor pool; ~350 contractor FTE on installation",ceiling:"$85M"},{name:"KBR",color:"#f0a830",vehicle:"LOGCAP V — life support & exercise support",scope:"Base life support and exercise augmentation: food service, billeting, facility O&M, utilities, and surge logistics for NTC rotations and home-station exercises",ceiling:"Task order"}]},
+      { name:"Fort Campbell", country:"KY/TN", lat:36.66, lng:-87.47,
+        contractors:[{name:"Vanquish Worldwide",color:"#3ec98a",vehicle:"EAGLE II — 101st ABN, 5th SFG(A), 160th SOAR",scope:"Full LRC: vehicle/equipment maintenance including aviation ground support equipment; SSA retail supply; ASP; CIF; transportation motor pool for 101st ABN, 5th SFG(A), and 160th SOAR units",ceiling:"$115M"}]},
+      { name:"Fort Bragg", country:"NC", lat:35.14, lng:-79.00,
+        recompete:{ incumbent:"V2X / Vectrus", ceiling:"$593M", expires:"2026", notes:"Largest single EAGLE task order ever. V2X full-LRC contract expiring 2026 — expected to recompete as EAGLE II small-business set-aside, creating major opening for qualified SB primes. Technica LLC awarded separate sub-scope EAGLE task order Dec 2024 ($21.7M, through 2029)." },
+        contractors:[{name:"V2X / Vectrus (exp.)",color:"#ff6b35",vehicle:"EAGLE (expiring) — full LRC, 82nd ABN, XVIII Corps",scope:"Full LRC services: maintenance (tactical/non-tactical), SSA retail & wholesale supply, ASP, CIF, transportation motor pool for 82nd Airborne Division, XVIII Airborne Corps, USASOC, and 160+ tenant units; largest single EAGLE task order",ceiling:"$593M"},{name:"Technica LLC",color:"#2eccd6",vehicle:"EAGLE II — logistics support services (W519TC-25-F-0040)",scope:"Logistics support services under new EAGLE II task order Dec 2024; maintenance, supply, and transportation services at Fort Liberty (Bragg) for specified scope within the larger LRC structure",ceiling:"$21.7M"},{name:"Marton Technologies",color:"#a07cf4",vehicle:"EAGLE II — SSA sub scope",scope:"Supply Support Activity (SSA) assistance team services; material accountability, wholesale supply, property book support for selected XVIII Corps units",ceiling:"Undisclosed"},{name:"Vanquish (sub)",color:"#3ec98a",vehicle:"EAGLE II — 189th DSSB SSA team",scope:"SSA assistance team for Alpha Co., 189th Division Sustainment Support Battalion; supply accountability, Class I-IX material management, wholesale interface",ceiling:"Undisclosed"}]},
+      { name:"Fort Benning", country:"GA", lat:32.35, lng:-84.99,
+        recompete:{ incumbent:"V2X / Vectrus", ceiling:"$265M", expires:"Dec 2026", notes:"V2X held via original EAGLE BOA. Recompete under EAGLE II small-business set-aside. Watch SAM.gov for RFP late 2025/early 2026." },
+        contractors:[{name:"V2X / Vectrus (exp.)",color:"#ff6b35",vehicle:"EAGLE (expiring) — full LRC, maint, supply, transport",ceiling:"$265M",scope:"Full LRC at Fort Benning/Moore: vehicle/equipment maintenance, SSA retail/wholesale supply, CIF, ASP, transportation motor pool for Maneuver Center of Excellence (MCoE), 3rd ID IBCT, and tenant units; expiring Dec 2026"}]},
+      { name:"JBLM", country:"WA", lat:47.09, lng:-122.58,
+        recompete:{ incumbent:"PD Systems", ceiling:"$28M", expires:"2023", notes:"PD Systems task order expired. Recompete status unclear — watch SAM.gov for JBLM LRC solicitation. Yakima TC included in scope." },
+        contractors:[{name:"PD Systems",color:"#a0c4ff",vehicle:"EAGLE II — supply & transportation, JBLM + Yakima TC",scope:"Supply support and transportation services at JBLM main post and Yakima Training Center (YTC); SSA retail supply, CIF, cargo/freight movement, and transportation motor pool for I Corps and tenant units",ceiling:"$28M"},{name:"KBR",color:"#f0a830",vehicle:"LOGCAP V — life support & exercise support",scope:"Base life support and exercise augmentation: food service, billeting, facility O&M, utilities, and surge logistics for NTC rotations and home-station exercises",ceiling:"Task order"}]},
+      { name:"Fort McCoy", country:"WI", lat:43.94, lng:-90.69,
+        contractors:[{name:"Vanquish Worldwide",color:"#3ec98a",vehicle:"EAGLE II — LRC maint, supply & transportation",scope:"Vehicle/equipment materiel maintenance; SSA retail supply; CIF operations; ASP; transportation motor pool supporting home-station and mobilization/deployment mission",ceiling:"$58M"}]},
+      { name:"Fort Leonard Wood", country:"MO", lat:37.72, lng:-92.14,
+        contractors:[{name:"Vanquish Worldwide",color:"#3ec98a",vehicle:"EAGLE II — LRC maint, supply & transportation",scope:"Vehicle/equipment materiel maintenance; SSA retail supply; CIF operations; ASP; transportation motor pool supporting home-station and mobilization/deployment mission",ceiling:"$35M"}]},
+      { name:"Fort Drum", country:"NY", lat:44.05, lng:-75.77,
+        contractors:[{name:"KBR",color:"#f0a830",vehicle:"LOGCAP V — life support, facilities, contingency",scope:"Base life support including food service, facilities O&M, utilities management, billeting, and contingency surge capacity for 10th Mountain Division and tenant units",ceiling:"Task order"}]},
+      { name:"Fort Knox", country:"KY", lat:37.90, lng:-85.97,
+        recompete:{ incumbent:"Incumbent unknown", ceiling:"TBD", expires:"Open solicitation", notes:"EAGLE solicitation W519TC-23-R-0088 issued by ACC-Rock Island for Fort Knox LRC logistics support — no award publicly confirmed. KBR holds separate LOGCAP V task order for food service (cadet summer training, 600K+ meals/yr). EAGLE incumbent for the LRC proper is undetermined." },
+        contractors:[{name:"EAGLE LRC — open solicitation",color:"#ff6b35",vehicle:"EAGLE — W519TC-23-R-0088 solicited, award not confirmed",scope:"Full LRC scope solicited: vehicle/equipment maintenance, SSA retail supply, CIF, ASP, and transportation motor pool for Armor School (Patton Museum), recruiting command, ROTC, and other Fort Knox tenant units",ceiling:"TBD"},{name:"KBR",color:"#f0a830",vehicle:"LOGCAP V — food service, cadet summer training (600K+ meals/yr)",scope:"Food service operations including Cadet Summer Training (CST) meal production (600,000+ meals annually), dining facility management, and year-round garrison food program",ceiling:"Seasonal TO"}]},
+      { name:"Fort Sill", country:"OK", lat:34.65, lng:-98.40,
+        recompete:{ incumbent:"Incumbent unknown", ceiling:"TBD", expires:"Unknown", notes:"Fort Sill is a confirmed EAGLE site per ACC-RI solicitation history (Fires Center of Excellence). LRC task order incumbent not identified in open sources. Recommend USASpending IDV search against W52P1J-17 for confirmed holder." },
+        contractors:[{name:"EAGLE LRC — incumbent unconfirmed",color:"#ff6b35",vehicle:"EAGLE — confirmed site; task order holder not in open sources",scope:"LRC scope: vehicle/equipment maintenance, SSA supply, ASP, CIF, and transportation motor pool; installation tenant units and mission drive specific scope; holder unconfirmed in open sources",ceiling:"Unknown"}]},
+      { name:"Fort Huachuca", country:"AZ", lat:31.55, lng:-110.34,
+        recompete:{ incumbent:"Incumbent unknown", ceiling:"TBD", expires:"Unknown", notes:"Fort Huachuca is a confirmed EAGLE site (home of Army Intelligence Center of Excellence, NETCOM). LRC task order incumbent not identified in open sources. Recommend USASpending IDV search against W52P1J-17." },
+        contractors:[{name:"EAGLE LRC — incumbent unconfirmed",color:"#ff6b35",vehicle:"EAGLE — confirmed site; task order holder not in open sources",scope:"LRC scope: vehicle/equipment maintenance, SSA supply, ASP, CIF, and transportation motor pool; installation tenant units and mission drive specific scope; holder unconfirmed in open sources",ceiling:"Unknown"}]},
+      { name:"Fort Leavenworth", country:"KS", lat:39.36, lng:-94.92,
+        recompete:{ incumbent:"Incumbent unknown", ceiling:"TBD", expires:"Unknown", notes:"Fort Leavenworth is a confirmed EAGLE site (home of CGSC, Combined Arms Center). LRC task order incumbent not identified in open sources. Recommend USASpending IDV search against W52P1J-17." },
+        contractors:[{name:"EAGLE LRC — incumbent unconfirmed",color:"#ff6b35",vehicle:"EAGLE — confirmed site; task order holder not in open sources",scope:"LRC scope: vehicle/equipment maintenance, SSA supply, ASP, CIF, and transportation motor pool; installation tenant units and mission drive specific scope; holder unconfirmed in open sources",ceiling:"Unknown"}]},
+      { name:"Fort Jackson", country:"SC", lat:34.05, lng:-80.89,
+        recompete:{ incumbent:"Incumbent unknown", ceiling:"TBD", expires:"Unknown", notes:"Fort Jackson is a confirmed EAGLE site (largest Army Initial Entry Training Center). LRC task order incumbent not identified in open sources. Recommend USASpending IDV search against W52P1J-17." },
+        contractors:[{name:"EAGLE LRC — incumbent unconfirmed",color:"#ff6b35",vehicle:"EAGLE — confirmed site; task order holder not in open sources",scope:"LRC scope: vehicle/equipment maintenance, SSA supply, ASP, CIF, and transportation motor pool; installation tenant units and mission drive specific scope; holder unconfirmed in open sources",ceiling:"Unknown"}]},
+      { name:"Fort Irwin (NTC)", country:"CA", lat:35.26, lng:-116.69,
+        recompete:{ incumbent:"KBR (LOGCAP) — EAGLE LRC open", ceiling:"TBD", expires:"Open solicitation", notes:"EAGLE solicitation W519TC-25-R-0009 issued Jan 2026 exclusively for 8(a) EAGLE BOA holders. Proposals due March 6, 2026. Best value source selection. KBR holds a separate LOGCAP V task order for NTC life support ($145M mod, 2026). The LRC logistics contract (maint/supply/transport) is a distinct open opportunity." },
+        contractors:[{name:"EAGLE LRC — open 8(a) solicitation",color:"#ff6b35",vehicle:"EAGLE — W519TC-25-R-0009; 8(a) set-aside, proposals due Mar 2026",scope:"Full LRC at NTC Fort Irwin: maintenance on tactical/non-tactical vehicles & equipment used in OPFOR/training rotations; SSA retail supply; ASP; CIF; transportation motor pool supporting ~20 annual NTC rotation cycles; 8(a) set-aside exclusively for BOA holders",ceiling:"TBD"},{name:"KBR",color:"#f0a830",vehicle:"LOGCAP V — NTC life support & logistics",scope:"Full NTC life support: OPFOR/BLUFOR billeting, food service, vehicle maintenance, range sustainment, communications infrastructure, power/water operations for ~20,000 rotational personnel annually",ceiling:"$145M mod"}]},
+      { name:"West Point", country:"NY", lat:41.39, lng:-73.96,
+        contractors:[{name:"Akima AFO",color:"#2eccd6",vehicle:"EAGLE II — logistics support & vehicle maintenance, USMA",scope:"Vehicle/equipment maintenance, supply support, and transportation services for USMA academic and garrison operations; CIF, motor pool, and property accountability support",ceiling:"Undisclosed"}]},
+      { name:"Fort Gregg-Adams / JBLE / Fort Story", country:"VA", lat:37.23, lng:-77.32,
+        contractors:[{name:"Vanquish Worldwide",color:"#3ec98a",vehicle:"EAGLE II — LRC maint, supply & transport; CASCOM, 7th Sustainment Bde, FORSCOM elements",scope:"Full LRC at Fort Gregg-Adams (formerly Lee), JBLE, and Fort Story: vehicle/equipment maintenance, SSA retail/wholesale supply, CIF, ASP, transportation motor pool for CASCOM (Army logistics schoolhouse), 7th Sustainment Brigade, and FORSCOM elements; strategic TRADOC logistics training installation",ceiling:"$65–66M"}]},
+      { name:"Fort Novosel (Rucker)", country:"AL", lat:31.31, lng:-85.72,
+        contractors:[{name:"Vanquish Worldwide",color:"#3ec98a",vehicle:"EAGLE II — LRC maint, supply & transport; Aviation Center of Excellence",scope:"Vehicle/equipment maintenance, SSA supply, CIF, ASP, transportation motor pool supporting Army Aviation Center of Excellence (USAACE), flight training aviation ground support equipment maintenance, and tenant aviation units",ceiling:"Undisclosed"}]},
+      { name:"Eglin AFB", country:"FL", lat:30.48, lng:-86.53,
+        contractors:[{name:"Vanquish Worldwide",color:"#3ec98a",vehicle:"EAGLE II — LRC maint, supply & transport; joint base Army LRC scope",scope:"Army LRC scope at Eglin AFB joint base: vehicle/equipment maintenance, SSA retail supply, CIF, ammunition supply, and transportation motor pool for Army tenant units at Air Force primary installation",ceiling:"Undisclosed"}]},
+      { name:"Rock Island Arsenal", country:"IL", lat:41.51, lng:-90.56,
+        contractors:[{name:"Vanquish (sub)",color:"#3ec98a",vehicle:"EAGLE II — logistics sub-contractor scope at AMC headquarters installation",scope:"Sub-contractor logistics support at Rock Island Arsenal; supply and transportation support services in the AMC/ASC headquarters environment; Rock Island is also ACC-RI contracting HQ for EAGLE program",ceiling:"Undisclosed"}]},
+      { name:"Fort Wainwright", country:"AK", lat:64.83, lng:-147.64,
+        contractors:[{name:"Chenega CBLS",color:"#f05050",vehicle:"LOGCAP — base ops support, Wainwright + training areas",scope:"Comprehensive base operations support: facility maintenance, utilities, custodial, grounds, pest control, fire/emergency services, vehicle maintenance, supply, transportation for Ft. Wainwright and Yukon Training Area",ceiling:"$220M"}]},
+      { name:"JBER", country:"AK", lat:61.25, lng:-149.70,
+        contractors:[{name:"Chenega CBLS",color:"#f05050",vehicle:"LOGCAP — base ops support, INDOPACOM/NORTHCOM interface",scope:"Base operations support at JBER: facility maintenance, utilities, vehicle maintenance, supply, transportation, and custodial services for Army and Air Force tenant units; strategic Pacific gateway installation",ceiling:"$110M"}]},
+      { name:"Fort Stewart / Hunter AAF", country:"GA", lat:31.87, lng:-81.61,
+        contractors:[{name:"Akima Sunik",color:"#2eccd6",vehicle:"EAGLE II — AFSBn-Stewart; 3rd ID, 1-75th Rangers, 3-160th SOAR",scope:"Maintenance, supply, and transportation for AFSBn-Stewart: 3rd Infantry Division (Rock of the Marne), 1st Battalion 75th Ranger Regiment, and 3rd Battalion 160th SOAR; tactical vehicle/equipment maintenance, SSA, ASP, CIF, transportation motor pool; ~100 contractor FTE",ceiling:"$44M"}]},
+    ]
+  },
+  {
+    id:"eucom", name:"U.S. European Command", short:"EUCOM", hq:"Stuttgart, Germany",
+    prime:"KBR (LOGCAP V) — $3.1B sole-source extension through 2030 (GAO upheld Feb 2026)",
+    color:"#3ec98a", mapType:"world",
+    stats:{ sites:10, contractors:1, vehicle:"LOGCAP V" },
+    installations:[
+      { name:"Grafenwöhr / Vilseck",  country:"Germany",   lat:49.69, lng:11.91,
+        contractors:[{name:"KBR",color:"#3ec98a",vehicle:"LOGCAP V — BOS, engineering, food service, fire/emergency response",scope:"Base operating support at Grafenwöhr/Vilseck: facilities O&M, engineering/construction/maintenance, food service for 7th ATC training rotations, fire protection and emergency response; largest USAREUR-AF training area",ceiling:"$304M mod"}]},
+      { name:"Ramstein AB",           country:"Germany",   lat:49.44, lng:7.60,
+        contractors:[{name:"KBR",color:"#3ec98a",vehicle:"LOGCAP V — base life support, largest US airbase in Europe",scope:"Life support at Ramstein: billeting, food service, facilities maintenance, power/utilities, vehicle maintenance for HQ USAFE-AFAFRICA and Army tenant elements; EUCOM airlift hub",ceiling:"Task order"}]},
+      { name:"Vicenza / Camp Ederle", country:"Italy",     lat:45.55, lng:11.55,
+        contractors:[{name:"KBR",color:"#3ec98a",vehicle:"LOGCAP V — life support, 173rd Airborne Brigade",scope:"Base life support at Caserma Ederle/Del Din: billeting, food service, facilities O&M, vehicle maintenance for 173rd Airborne Brigade Combat Team (Sky Soldiers) and USAREUR-AF elements",ceiling:"Task order"}]},
+      { name:"Camp Bondsteel",        country:"Kosovo",    lat:42.36, lng:21.35,
+        contractors:[{name:"KBR",color:"#3ec98a",vehicle:"LOGCAP V — full base operations, KFOR mission",scope:"Full base ops at Camp Bondsteel: billeting, food service, medical facility support, facilities O&M, utilities, vehicle maintenance for KFOR NATO peacekeeping mission; largest US base in SE Europe",ceiling:"Task order"}]},
+      { name:"Novo Selo (NSTA)",      country:"Bulgaria",  lat:42.65, lng:26.33,
+        contractors:[{name:"KBR",color:"#3ec98a",vehicle:"LOGCAP V — Op. Atlantic Resolve; 1M+ work hours LTI-free",scope:"Operation Atlantic Resolve support at Novo Selo Training Area (NSTA): facilities construction/O&M, power generation, water supply, laundry, latrines for rotational armored BCT training; 1M+ labor hours without recordable injury",ceiling:"Task order"}]},
+      { name:"Drawsko Pomorskie",     country:"Poland",    lat:53.53, lng:15.81,
+        contractors:[{name:"KBR",color:"#3ec98a",vehicle:"LOGCAP V — Op. Atlantic Resolve; 3M+ work hours LTI-free",scope:"Operation Atlantic Resolve at Drawsko Pomorskie (OAR): mobilization/demobilization of training infrastructure, facilities O&M, billeting, food service for 25+ opened/closed/warm-based sites; 3M+ work hours LTI-free record",ceiling:"Task order"}]},
+      { name:"Ādaži / Camp Ādaži",   country:"Latvia",    lat:57.07, lng:24.32,
+        contractors:[{name:"KBR",color:"#3ec98a",vehicle:"LOGCAP V — eFP battlegroup life support",scope:"Enhanced Forward Presence life support at Ādaži: billeting, food service, vehicle maintenance, facilities O&M for NATO eFP battlegroup (US-led); airfield management services supporting Contingency Response Group",ceiling:"Task order"}]},
+      { name:"Rukla",                 country:"Lithuania", lat:55.47, lng:23.52,
+        contractors:[{name:"KBR",color:"#3ec98a",vehicle:"LOGCAP V — eFP life support, NATO enhanced forward presence",scope:"Enhanced Forward Presence life support at Rukla: billeting, food service, facilities O&M, vehicle maintenance for NATO eFP battlegroup; Lithuania is a frontline Baltic state NATO position",ceiling:"Task order"}]},
+      { name:"Mihail Kogălniceanu AB",country:"Romania",   lat:44.36, lng:28.49,
+        contractors:[{name:"KBR",color:"#3ec98a",vehicle:"LOGCAP V — base operations support",scope:"Base operations at MK Air Base: billeting, food service, facilities maintenance, vehicle maintenance for Black Sea-region rotational forces and Romanian Armed Forces joint use; NATO eastern flank presence",ceiling:"Task order"}]},
+      { name:"Incirlik AB (Site K)",  country:"Turkey",    lat:37.00, lng:35.43,
+        contractors:[{name:"KBR",color:"#3ec98a",vehicle:"LOGCAP V — 2,000 days / 1M+ hrs LTI-free as of 2022",scope:"Site K Turkey base life support: food service, billeting, facilities maintenance, power/utilities for Incirlik area Army support elements; 2,000 days and 1M+ labor hours without a recordable injury as of Aug 2022",ceiling:"Task order"}]},
+      { name:"EUCOM (LOGCAP 5.5)",    country:"Theater-wide", lat:50.00, lng:15.00,
+        recompete:{ incumbent:"KBR", ceiling:"$3.1B (extension)", expires:"~2030", notes:"Amentum-Parsons JV protested KBR's sole-source EUCOM extension. GAO upheld Army's justification Feb 2026. LOGCAP VI or 5.5 recompete expected — largest single theater LOGCAP recompete on the horizon." },
+        contractors:[{name:"KBR (LOGCAP 5.5 recompete pending)",color:"#ff6b35",vehicle:"LOGCAP V.V / VI — theater-wide recompete anticipated; watch for RFP",scope:"Full EUCOM theater LOGCAP scope: ~50 locations across Bulgaria, Germany, Italy, Kosovo, Latvia, Lithuania, Poland, Romania, Turkey; ~20,000 US government personnel supported; BOS, engineering, food service, supply chain, life support, contingency ops; $3.1B extension under protest",ceiling:"$3.1B extension"}]},
+    ]
+  },
+  {
+    id:"indopacom", name:"U.S. Indo-Pacific Command", short:"INDOPACOM", hq:"Camp H.M. Smith, HI",
+    prime:"V2X / Vectrus (LOGCAP V) — extended through June 2030",
+    color:"#a07cf4", mapType:"world",
+    stats:{ sites:8, contractors:2, vehicle:"LOGCAP V" },
+    installations:[
+      { name:"Camp Humphreys",        country:"South Korea",     lat:36.97, lng:126.99,
+        contractors:[{name:"V2X",color:"#a07cf4",vehicle:"LOGCAP V — largest overseas US base; full life support",scope:"Full base life support at Camp Humphreys: food service, billeting, facilities O&M, power/utilities, vehicle maintenance, supply chain for 2nd Infantry Division, 8th Army HQ, USFK elements; largest US overseas installation (~36,000 personnel)",ceiling:"Task order"}]},
+      { name:"Camp Walker / Daegu",   country:"South Korea",     lat:35.88, lng:128.60,
+        contractors:[{name:"V2X",color:"#a07cf4",vehicle:"LOGCAP V — life support & logistics",scope:"Life support and logistics at Camp Walker/Daegu: food service, billeting, facilities O&M, vehicle maintenance for 19th Expeditionary Sustainment Command and USFK logistics elements",ceiling:"Task order"}]},
+      { name:"Kadena AB",             country:"Japan (Okinawa)", lat:26.36, lng:127.77,
+        contractors:[{name:"V2X",color:"#a07cf4",vehicle:"LOGCAP V — Army element support",scope:"Army element support at Kadena: vehicle maintenance, supply, and life support for Army Air and Missile Defense Command (AAMDC) and USARPAC elements on the primary USAF hub in the Pacific",ceiling:"Task order"}]},
+      { name:"Kwajalein / Reagan TS", country:"Marshall Islands", lat:8.72, lng:167.73,
+        contractors:[{name:"V2X",color:"#a07cf4",vehicle:"LOGCAP V — Reagan Test Site; COVID-delayed transition completed 2022",scope:"Life support and logistics at Reagan Ballistic Missile Defense Test Site (RTS): food service, billeting, facilities O&M, vehicle maintenance, supply for remote atoll installation; COVID-delayed transition from prior contractor completed 2022",ceiling:"Task order"}]},
+      { name:"Clark / Fort Magsaysay",country:"Philippines",     lat:15.18, lng:120.55,
+        contractors:[{name:"V2X",color:"#a07cf4",vehicle:"LOGCAP V — INDOPACOM presence expansion; sevenfold revenue growth 2022",scope:"Growing LOGCAP footprint in Philippines: base life support, engineering support, and logistics for joint exercises (Balikatan, Salaknib), EDCA site development, and rotational force sustainment; sevenfold revenue growth 2022",ceiling:"Task order"}]},
+      { name:"Schofield Barracks",    country:"USA (Hawaii)",    lat:21.50, lng:-158.06,
+        contractors:[{name:"V2X",color:"#a07cf4",vehicle:"LOGCAP V — USARPAC support",scope:"Base life support and exercise logistics at Schofield Barracks: food service, billeting, vehicle maintenance, supply chain for 25th Infantry Division (Tropic Lightning), USARPAC, and USAHSC Pacific",ceiling:"Task order"}]},
+      { name:"APS-4 Korea/Japan",     country:"Korea/Japan APS", lat:35.10, lng:129.00,
+        recompete:{ incumbent:"Amentum-Parsons JV (protested)", ceiling:"$63.7M", expires:"Rebid pending", notes:"GAO found flaws in Army's evaluation (Oct 2024). Army must rerun competition under LOGCAP V.V. KBR and V2X both protested." },
+        contractors:[{name:"Amentum-Parsons JV (rebid)",color:"#ff6b35",vehicle:"APS-4 — LOGCAP V.V recompete pending GAO ruling",scope:"Care of Supplies in Storage (COSIS) for Army Prepositioned Stock APS-4: inventory management, equipment maintenance/preservation, supply operations for pre-positioned war stocks in Korea and Japan; GAO-ordered recompete pending",ceiling:"$63.7M"}]},
+      { name:"Darwin",                country:"Australia",       lat:-12.46, lng:130.84,
+        contractors:[{name:"V2X",color:"#a07cf4",vehicle:"LOGCAP V — Marine Rotational Force Darwin support",scope:"Life support for Marine Rotational Force-Darwin (MRF-D): food service, billeting, facilities O&M, vehicle maintenance, supply logistics for ~2,500 USMC rotational personnel at Robertson Barracks",ceiling:"Task order"}]},
+    ]
+  },
+  {
+    id:"centcom", name:"U.S. Central Command", short:"CENTCOM", hq:"MacDill AFB, FL",
+    prime:"V2X (LOGCAP V) — Kuwait, Iraq, CENTCOM; extended to June 2030",
+    color:"#f0a830", mapType:"world",
+    stats:{ sites:7, contractors:2, vehicle:"LOGCAP V" },
+    installations:[
+      { name:"Camp Arifjan",      country:"Kuwait",      lat:29.20, lng:47.96,
+        contractors:[{name:"V2X",color:"#f0a830",vehicle:"LOGCAP V — primary CENTCOM hub, full logistics",scope:"Full logistics at Camp Arifjan: base life support (food service, billeting, facilities O&M, power, water), vehicle/equipment maintenance, supply chain, transportation motor pool for ARCENT HQ, 1st TSC, and CENTCOM rotational forces; primary Army logistics hub in theater",ceiling:"Task order"},{name:"Amentum-Parsons JV",color:"#ff6b35",vehicle:"APS-5 Kuwait — protested, rebid pending",scope:"COSIS for Army Prepositioned Stock APS-5 Kuwait: equipment maintenance/preservation, inventory management, supply operations for largest pre-positioned war stocks set outside CONUS; GAO-ordered recompete pending",ceiling:"$128.2M"}]},
+      { name:"Ali Al Salem AB",   country:"Kuwait",      lat:29.35, lng:47.51,
+        contractors:[{name:"V2X",color:"#f0a830",vehicle:"LOGCAP V — air base life support for Army elements",scope:"Life support for Army elements at Ali Al Salem: food service, billeting, facilities maintenance, vehicle readiness for Army aviation and support units at primary Kuwait airfield hub",ceiling:"Task order"}]},
+      { name:"Al Udeid AB",       country:"Qatar",       lat:25.12, lng:51.31,
+        contractors:[{name:"V2X",color:"#f0a830",vehicle:"LOGCAP V — base life support for Army elements",scope:"Life support for Army elements at Al Udeid: food service, billeting, facilities O&M, vehicle maintenance for ARCENT/CENTCOM Army staff and liaison elements at primary USAF CENTCOM hub",ceiling:"Task order"}]},
+      { name:"BIAP / VBC",        country:"Iraq",        lat:33.26, lng:44.23,
+        contractors:[{name:"V2X",color:"#f0a830",vehicle:"LOGCAP V — Iraq task order; extended to June 2030",scope:"Base life support at BIAP/Victory Base Complex: food service, billeting, facilities O&M, power/utilities, vehicle maintenance, supply chain for OSC-I and OIR mission support elements; extended to June 2030",ceiling:"Task order"}]},
+      { name:"Al-Tanf Garrison",  country:"Syria",       lat:33.46, lng:38.65,
+        contractors:[{name:"V2X",color:"#f0a830",vehicle:"LOGCAP V — logistics & life support, deconfliction zone",scope:"Life support at Al-Tanf Garrison in the 55km deconfliction zone: food service, billeting, facilities O&M, vehicle maintenance, supply for ~200-300 US Special Operations Forces and partner Maghawir al-Thawra fighters",ceiling:"Task order"}]},
+      { name:"Muwaffaq Salti AB", country:"Jordan",      lat:31.83, lng:36.79,
+        contractors:[{name:"V2X",color:"#f0a830",vehicle:"LOGCAP V — support to Army rotational forces",scope:"Life support at Muwaffaq Salti AB: food service, billeting, facilities O&M, vehicle maintenance for Army aviation rotational forces (Apache, Blackhawk), and CENTCOM Army liaison elements",ceiling:"Task order"}]},
+      { name:"APS-5 Kuwait",      country:"Kuwait APS",  lat:29.10, lng:47.60,
+        recompete:{ incumbent:"Amentum-Parsons JV (protested)", ceiling:"$128.2M", expires:"Rebid pending", notes:"V2X protested Amentum-Parsons APS-5 win. GAO found Army evaluation flawed (Oct 2024). Army must recompete under LOGCAP V.V." },
+        contractors:[{name:"Amentum-Parsons JV (rebid)",color:"#ff6b35",vehicle:"APS-5 — LOGCAP V.V recompete pending",scope:"COSIS for APS-5 Kuwait pre-positioned war stocks: equipment preservation, maintenance, inventory management; GAO found flaws in Army evaluation Oct 2024; recompete under LOGCAP V.V pending",ceiling:"$128.2M"}]},
+    ]
+  },
+  {
+    id:"africom", name:"U.S. Africa Command", short:"AFRICOM", hq:"Stuttgart, Germany",
+    prime:"Fluor Corporation (LOGCAP V) — AFRICOM AOR",
+    color:"#f05a5a", mapType:"world",
+    stats:{ sites:6, contractors:1, vehicle:"LOGCAP V" },
+    installations:[
+      { name:"Camp Lemonnier",         country:"Djibouti",  lat:11.55, lng:43.15,
+        contractors:[{name:"Fluor",color:"#f05a5a",vehicle:"LOGCAP V — CJTF-HOA HQ; food svc, facility repairs, water ops",scope:"CJTF-HOA base life support at Camp Lemonnier: food service for 800+ personnel, maintenance/repair on 50+ facilities, water operations, fuel service (ground and air assets), billeting, power generation, waste management; primary US base in Africa",ceiling:"Task order"}]},
+      { name:"Chabelley Airfield",     country:"Djibouti",  lat:11.47, lng:43.00,
+        contractors:[{name:"Fluor",color:"#f05a5a",vehicle:"LOGCAP V — airfield operations & life support",scope:"Airfield management and life support at Chabelley: passenger movement, aircraft missions, power/fuel/water, facilities O&M for MQ-9 Reaper ISR/strike operations and CJTF-HOA airfield support",ceiling:"Task order"}]},
+      { name:"Manda Bay / Camp Simba", country:"Kenya",     lat:-2.17, lng:41.07,
+        contractors:[{name:"Fluor",color:"#f05a5a",vehicle:"LOGCAP V — AFRICOM forward presence, air base support",scope:"Life support at Camp Simba/Manda Bay: food service, billeting, facilities O&M, vehicle maintenance for AFRICOM counterterrorism operations (CT-OIR East Africa) and Kenya bilateral engagement",ceiling:"Task order"}]},
+      { name:"Baledogle AB",           country:"Somalia",   lat:2.34,  lng:44.94,
+        contractors:[{name:"Fluor",color:"#f05a5a",vehicle:"LOGCAP V — support to SNA and AMISOM training ops",scope:"Base life support at Baledogle: food service, billeting, facilities O&M, vehicle maintenance for AFRICOM advise-and-assist mission supporting Somali National Army (SNA) and AU Transition Mission Somalia (ATMIS)",ceiling:"Task order"}]},
+      { name:"Agadez Air Base 201",    country:"Niger",     lat:16.99, lng:8.00,
+        recompete:{ incumbent:"Fluor", ceiling:"Classified", expires:"Drawdown 2024", notes:"US forces withdrawing from Niger following 2023 coup. Air Base 201 drawdown underway. LOGCAP scope significantly reduced. Watch for reconsolidation of AFRICOM contract footprint." },
+        contractors:[{name:"Fluor (drawdown)",color:"#ff6b35",vehicle:"LOGCAP V — ISR forward ops; drawdown underway post-coup 2024",scope:"Base life support at Air Base 201 for MQ-9 ISR operations: food service, billeting, facilities O&M, power/fuel/water; drawdown of US forces underway following July 2023 Niger coup and 2024 SOFA termination; scope significantly reduced",ceiling:"Classified"}]},
+      { name:"Entebbe / Uganda ops",   country:"Uganda",    lat:0.04,  lng:32.44,
+        contractors:[{name:"Fluor",color:"#f05a5a",vehicle:"LOGCAP V — USASOC forward support, CJTF-HOA coordination",scope:"Forward support at Entebbe/Uganda: logistics coordination, supply, and life support for USASOC East Africa operations and LRA counter-mission support; CJTF-HOA secondary hub for Great Lakes region operations",ceiling:"Task order"}]},
+    ]
+  },
+  {
+    id:"southcom", name:"U.S. Southern Command", short:"SOUTHCOM", hq:"Doral, FL",
+    prime:"Amentum / PAE-Parsons (LOGCAP V) — SOUTHCOM AOR",
+    color:"#2eccd6", mapType:"world",
+    stats:{ sites:5, contractors:1, vehicle:"LOGCAP V" },
+    installations:[
+      { name:"Soto Cano AB (JTF-Bravo)", country:"Honduras",    lat:14.38, lng:-87.62,
+        contractors:[{name:"Amentum / PAE-Parsons",color:"#2eccd6",vehicle:"LOGCAP V — primary SOUTHCOM hub; PAE transitioned from Fluor",scope:"Full base life support at Soto Cano (JTF-Bravo): food service, billeting, facilities O&M, vehicle/aircraft maintenance, supply chain, transportation motor pool for JTF-Bravo HQ, 1-228th Aviation Regiment, and US Army South elements; bulk of SOUTHCOM LOGCAP activity",ceiling:"Task order"}]},
+      { name:"Guantanamo Bay (GTMO)",    country:"Cuba",         lat:19.90, lng:-75.10,
+        contractors:[{name:"Amentum / PAE-Parsons",color:"#2eccd6",vehicle:"LOGCAP V — base life support",scope:"Life support at GTMO: food service, billeting, facilities O&M, power/utilities, vehicle maintenance for Joint Task Force Guantanamo detention operations and DoD personnel; politically sensitive operating environment",ceiling:"Task order"}]},
+      { name:"Tres Esquinas",            country:"Colombia",     lat:0.75,  lng:-75.25,
+        contractors:[{name:"Amentum / PAE-Parsons",color:"#2eccd6",vehicle:"LOGCAP V — FID/CT support, counter-narcotics ops",scope:"Life support at Tres Esquinas for Colombian National Police aviation base: food service, billeting, facilities O&M, vehicle maintenance supporting FID and counter-narcotics operations with Colombian partners",ceiling:"Task order"}]},
+      { name:"Comalapa Air Base",        country:"El Salvador",  lat:13.44, lng:-89.06,
+        contractors:[{name:"Amentum / PAE-Parsons",color:"#2eccd6",vehicle:"LOGCAP V — forward location overflight ops",scope:"Life support at Comalapa AB: food service, billeting, facilities maintenance, fuel and vehicle readiness for Forward Operating Location (FOL) counter-narcotics air surveillance operations",ceiling:"Task order"}]},
+      { name:"APS-3 Charleston + afloat",country:"USA / Afloat", lat:32.78, lng:-79.93,
+        recompete:{ incumbent:"Amentum-Parsons JV (protested)", ceiling:"$75.2M", expires:"Rebid pending", notes:"KBR and V2X protested Amentum-Parsons APS-3 win. GAO found flaws in Army evaluation (Oct 2024). Army must recompete under LOGCAP V.V. Covers Charleston depot + afloat prepositioned stocks." },
+        contractors:[{name:"Amentum-Parsons JV (rebid)",color:"#ff6b35",vehicle:"APS-3 Charleston/afloat — LOGCAP V.V recompete pending",scope:"COSIS for APS-3: equipment maintenance/preservation, inventory management for pre-positioned stocks at Charleston (land) and afloat (maritime pre-positioning); GAO-ordered recompete under LOGCAP V.V pending",ceiling:"$75.2M"}]},
+    ]
+  }
+];
+
+// ── TOOLTIP ───────────────────────────────────────────────────────────────────
+const tipEl = document.getElementById("gtip");
+function showTip(evt, inst, gccColor) {
+  const recompBanner = inst.recompete
+    ? `<div class="gt-recomp">⚠ Recompete — incumbent: ${inst.recompete.incumbent} · expires ${inst.recompete.expires}</div>` : "";
+  tipEl.innerHTML = `
+    <div class="gt-name" style="color:${inst.recompete ? '#ff6b35' : gccColor}">${inst.name}</div>
+    <div class="gt-sub">${inst.country}</div>
+    ${inst.contractors.map(c=>`
+      <div class="gt-c"><div class="gt-cd" style="background:${c.color}"></div>
+        <div style="flex:1;min-width:0">
+          <div><span style="font-weight:500">${c.name.split("(")[0].trim()}</span> <span style="color:var(--muted)">· ${c.vehicle.split("—")[0].trim()}</span>${c.ceiling?`<span style="margin-left:6px;font-family:var(--mono);font-size:9px;font-weight:600;color:${c.ceiling.startsWith("$")?"#7ab3ff":"var(--muted)"};background:rgba(255,255,255,0.07);padding:1px 5px;border-radius:3px">${c.ceiling}</span>`:""}</div>
+          ${c.scope?`<div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:3px;line-height:1.45">${c.scope}</div>`:""}
+        </div>
+      </div>`).join("")}
+    ${recompBanner}`;
+  let lx=evt.clientX+14, ly=evt.clientY-16;
+  if(lx+270>window.innerWidth) lx=evt.clientX-275;
+  if(ly+140>window.innerHeight) ly=window.innerHeight-145;
+  tipEl.style.left=lx+"px"; tipEl.style.top=ly+"px";
+  tipEl.classList.add("show");
+}
+function hideTip() { tipEl.classList.remove("show"); }
+
+// ── BUILD SECTION ─────────────────────────────────────────────────────────────
+function buildSection(gcc, worldTopo, usTopo) {
+  const section = document.createElement("div");
+  section.className = "gcc-section"; section.id = gcc.id;
+
+  // Map panel
+  const mapDiv = document.createElement("div");
+  mapDiv.className = "gcc-map";
+  mapDiv.style.setProperty("--gcc-color", gcc.color);
+
+  const svgEl = d3.create("svg");
+  mapDiv.appendChild(svgEl.node());
+
+  const loadDiv = document.createElement("div");
+  loadDiv.className = "map-load"; loadDiv.textContent = "Rendering…";
+  mapDiv.appendChild(loadDiv);
+
+  const labelDiv = document.createElement("div");
+  labelDiv.className = "gcc-label";
+  labelDiv.style.setProperty("--gcc-color", gcc.color);
+  labelDiv.innerHTML = `
+    <div class="gcc-label-eyebrow">Combatant Command</div>
+    <div class="gcc-label-name">${gcc.short}</div>
+    <div class="gcc-label-prime">${gcc.prime.split("—")[0].trim()}</div>`;
+  mapDiv.appendChild(labelDiv);
+
+  const mapLeg = document.createElement("div");
+  mapLeg.className = "map-legend";
+  mapLeg.innerHTML = `
+    <div class="ml-item"><div class="ml-dot" style="background:${gcc.color}"></div>Active contractor site</div>
+    <div class="ml-item"><div class="ml-sq"></div>Recompete / open solicitation / unknown incumbent</div>`;
+  mapDiv.appendChild(mapLeg);
+
+  // Info panel
+  const infoDiv = document.createElement("div");
+  infoDiv.className = "gcc-info";
+  infoDiv.style.setProperty("--gcc-color", gcc.color);
+
+  const recompCount = gcc.installations.filter(i=>i.recompete).length;
+  infoDiv.innerHTML = `
+    <div class="gcc-info-head">
+      <div class="gcc-info-title" style="color:${gcc.color}">${gcc.name}</div>
+      <div class="gcc-info-sub">${gcc.hq} · ${gcc.prime.split("—")[0].trim()}</div>
+    </div>
+    <div class="gcc-stats">
+      <div class="gs"><div class="gs-v" style="color:${gcc.color}">${gcc.stats.sites}</div><div class="gs-l">Sites</div></div>
+      <div class="gs"><div class="gs-v" style="color:${gcc.color}">${gcc.stats.contractors}</div><div class="gs-l">Firms</div></div>
+      <div class="gs"><div class="gs-v" style="color:${recompCount>0?'var(--orange)':gcc.color}">${recompCount}</div><div class="gs-l">Recompetes</div></div>
+    </div>
+    <div class="gcc-ceiling-strip">
+      <span class="gcs-label">Known contract value</span>
+      <span class="gcs-value" style="color:${gcc.color}">${(()=>{
+        const ceilings = gcc.installations.flatMap(i=>i.contractors).map(c=>c.ceiling||"").filter(v=>v.startsWith("$"));
+        const total = ceilings.reduce((s,v)=>{
+          const n = parseFloat(v.replace(/[$BMbm,]/g,''));
+          return s + (v.toLowerCase().includes('b') ? n*1000 : n);
+        },0);
+        if(total===0) return "Classified / TOs";
+        return total >= 1000 ? "$"+(total/1000).toFixed(1)+"B+" : "$"+Math.round(total)+"M+";
+      })()}</span>
+    </div>
+    <div class="gcc-inst-list" id="list-${gcc.id}"></div>
+    <div class="gcc-detail" id="detail-${gcc.id}"></div>`;
+
+  section.appendChild(mapDiv);
+  section.appendChild(infoDiv);
+
+  // Sidebar list
+  const listEl = infoDiv.querySelector(`#list-${gcc.id}`);
+  gcc.installations.forEach(inst => {
+    const row = document.createElement("div");
+    row.className = "inst-row"; row.dataset.id = inst.name;
+    const tags = inst.contractors.map(c=>{
+      const isKnown = c.ceiling && c.ceiling.startsWith("$");
+      const ceilStr = c.ceiling && c.ceiling !== "Task order" && c.ceiling !== "Seasonal TO" ? c.ceiling : (c.ceiling ? c.ceiling : "");
+      return `<span class="tag" style="background:${c.color}22;color:${c.color}"><span class="tag-dot" style="background:${c.color}"></span>${c.name.split(" ")[0]}${ceilStr?` <span style="opacity:${isKnown?'0.9':'0.5'};font-size:9px">${ceilStr}</span>`:""}</span>`;
+    }).join("");
+    const pill = inst.recompete ? `<span class="recomp-pill">⚠ ${inst.recompete.expires}</span>` : "";
+    row.innerHTML = `
+      <div class="ir-name" style="color:${inst.recompete?'var(--orange)':gcc.color}">${inst.name} ${pill}</div>
+      <div class="ir-meta">${inst.country}</div>
+      <div class="ir-tags">${tags}</div>`;
+    row.addEventListener("click", ()=>selectInst(gcc, inst, row, infoDiv));
+    listEl.appendChild(row);
+  });
+
+  // Render map after DOM paint
+  requestAnimationFrame(()=>{
+    const W = mapDiv.clientWidth || 700;
+    const H = mapDiv.clientHeight || 500;
+    svgEl.attr("viewBox",`0 0 ${W} ${H}`).attr("width",W).attr("height",H);
+
+    let proj;
+    if (gcc.mapType === "usa" && usTopo) {
+      proj = d3.geoAlbersUsa().scale(W*1.22).translate([W/2, H/2]);
+      const pathFn = d3.geoPath().projection(proj);
+      const states = topojson.feature(usTopo, usTopo.objects.states);
+      const mesh = topojson.mesh(usTopo, usTopo.objects.states, (a,b)=>a!==b);
+      svgEl.append("g").selectAll("path").data(states.features).join("path")
+        .attr("fill","#1c2e48").attr("stroke","#243550").attr("stroke-width",0.5).attr("d",pathFn);
+      svgEl.append("path").datum(mesh).attr("fill","none").attr("stroke","#2a3d5e").attr("stroke-width",0.4).attr("d",pathFn);
+    } else if (worldTopo) {
+      // Zoom center and scale per GCC
+      const gccZoom = {
+        eucom:     { center:[20, 49],   scale: W/1.5  },
+        indopacom: { center:[148, 18],  scale: W/2.4  },
+        centcom:   { center:[47, 28],   scale: W/1.3  },
+        africom:   { center:[33, 6],    scale: W/1.7  },
+        southcom:  { center:[-82, 14],  scale: W/1.4  },
+      };
+      const zoom = gccZoom[gcc.id] || { center:[0,20], scale: W/6.3 };
+      proj = d3.geoMercator().center(zoom.center).scale(zoom.scale).translate([W/2, H/2]);
+      const pathFn = d3.geoPath().projection(proj);
+      const countries = topojson.feature(worldTopo, worldTopo.objects.countries);
+      svgEl.append("g").selectAll("path").data(countries.features).join("path")
+        .attr("fill","#1c2e48").attr("stroke","#243550").attr("stroke-width",0.4).attr("d",pathFn);
+    }
+
+    loadDiv.style.display = "none";
+    const dotsG = svgEl.append("g");
+
+    gcc.installations.forEach(inst => {
+      if (!proj) return;
+      const pt = proj([inst.lng, inst.lat]);
+      if (!pt) return;
+      const [x,y] = pt;
+      const isRecomp = !!inst.recompete;
+      const dotColor = isRecomp ? "#ff6b35" : gcc.color;
+      const d1 = `${(Math.random()*2.5).toFixed(2)}s`;
+      const d2 = `${(Math.random()*2.5+0.8).toFixed(2)}s`;
+
+      const g = dotsG.append("g").attr("class","idot").attr("data-id",inst.name).style("cursor","pointer");
+
+      if (isRecomp) {
+        // Double dashed orange recompete rings
+        g.append("circle").attr("class","ring-recomp").attr("cx",x).attr("cy",y).attr("r",8)
+          .attr("stroke","#ff6b35").style("animation-delay",d1);
+        g.append("circle").attr("class","ring-recomp2").attr("cx",x).attr("cy",y).attr("r",8)
+          .attr("stroke","#ff6b35").style("animation-delay",d2);
+        // Diamond marker for recompete
+        const s = 8;
+        g.append("polygon").attr("points",`${x},${y-s} ${x+s},${y} ${x},${y+s} ${x-s},${y}`)
+          .attr("fill","#ff6b35").attr("opacity",1)
+          .attr("filter","drop-shadow(0 0 8px #ff6b35cc)");
+      } else {
+        g.append("circle").attr("class","ring1").attr("cx",x).attr("cy",y).attr("r",7)
+          .attr("stroke",dotColor).style("animation-delay",d1);
+        g.append("circle").attr("class","ring2").attr("cx",x).attr("cy",y).attr("r",7)
+          .attr("stroke",dotColor).style("animation-delay",d2);
+        g.append("circle").attr("class","ring3").attr("cx",x).attr("cy",y).attr("r",7)
+          .attr("stroke",dotColor).style("animation-delay",`${(Math.random()*1.5+0.3).toFixed(2)}s`);
+        g.append("circle").attr("class","core").attr("cx",x).attr("cy",y).attr("r",6)
+          .attr("fill",dotColor).attr("filter",`drop-shadow(0 0 8px ${dotColor}cc)`);
+      }
+
+      g.append("text").attr("class","ilabel").attr("x",x+9).attr("y",y+3.5)
+        .attr("fill","#ffffff").text(inst.name.split("/")[0].trim().replace("Fort ","Ft "));
+
+      g.on("click",()=>{
+        const row = listEl.querySelector(`[data-id="${inst.name}"]`);
+        listEl.querySelectorAll(".inst-row").forEach(r=>r.classList.remove("sel"));
+        if(row){ row.classList.add("sel"); row.scrollIntoView({behavior:"smooth",block:"nearest"}); }
+        selectInst(gcc, inst, row, infoDiv);
+      });
+      g.on("mouseenter",(e)=>showTip(e,inst,gcc.color));
+      g.on("mouseleave",hideTip);
+    });
+  });
+
+  return section;
+}
+
+function selectInst(gcc, inst, rowEl, infoDiv) {
+  infoDiv.querySelectorAll(".inst-row").forEach(r=>r.classList.remove("sel"));
+  if(rowEl) rowEl.classList.add("sel");
+  const detailEl = infoDiv.querySelector(`#detail-${gcc.id}`);
+  detailEl.classList.add("show");
+
+  const recompBanner = inst.recompete ? `
+    <div class="gd-recomp">
+      <div class="gd-recomp-title">⚠ Recompete Opportunity</div>
+      <div class="gd-recomp-body"><strong>Incumbent:</strong> ${inst.recompete.incumbent}<br><strong>Ceiling:</strong> ${inst.recompete.ceiling} · Expires: ${inst.recompete.expires}<br><br>${inst.recompete.notes}</div>
+    </div>` : "";
+
+  detailEl.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
+      <div>
+        <div class="gd-name" style="color:${inst.recompete?'var(--orange)':gcc.color}">${inst.name}</div>
+        <div class="gd-meta">${inst.country}</div>
+      </div>
+      <button class="gd-close" onclick="this.closest('.gcc-detail').classList.remove('show');this.closest('.gcc-info').querySelectorAll('.inst-row').forEach(r=>r.classList.remove('sel'))">✕</button>
+    </div>
+    ${recompBanner}
+    <div class="gd-sec-h">Contractors & Vehicles</div>
+    ${inst.contractors.map(c=>{
+      const isLarge = c.ceiling && c.ceiling.startsWith("$") && !c.ceiling.includes("TO") && !c.ceiling.includes("task") && !c.ceiling.includes("Task") && !c.ceiling.includes("od");
+      return `<div class="gd-row">
+        <div style="display:flex;align-items:start;justify-content:space-between;gap:8px;margin-bottom:2px">
+          <div class="gd-cname" style="color:${c.color}">${c.name}</div>
+          ${c.ceiling ? `<span style="font-family:var(--mono);font-size:11px;font-weight:600;color:${isLarge?"#7ab3ff":c.ceiling==="TBD"?"var(--orange)":"var(--muted)"};white-space:nowrap;flex-shrink:0;padding:1px 6px;background:rgba(255,255,255,0.06);border-radius:3px">${c.ceiling}</span>` : ""}
+        </div>
+        <div class="gd-role" style="margin-bottom:${c.scope?'5px':'0'}">${c.vehicle}</div>
+        ${c.scope ? `<div style="font-size:10px;color:var(--text);line-height:1.55;padding:6px 8px;background:rgba(255,255,255,0.04);border-radius:4px;border-left:2px solid ${c.color}40">${c.scope}</div>` : ""}
+      </div>`;
+    }).join("")}`;
+  detailEl.scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+const sectionsEl = document.getElementById("sections");
+Promise.all([
+  d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json"),
+  d3.json("https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json")
+]).then(([worldTopo, usTopo]) => {
+  GCCS.forEach(gcc => sectionsEl.appendChild(buildSection(gcc, worldTopo, usTopo)));
+
+  // Sticky nav highlight on scroll
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if(e.isIntersecting) {
+        document.querySelectorAll(".nav-link").forEach(l=>l.classList.remove("active"));
+        const link = document.querySelector(`.nav-link[href="#${e.target.id}"]`);
+        if(link) link.classList.add("active");
+      }
+    });
+  }, { threshold: 0.25 });
+  GCCS.forEach(gcc => { const el=document.getElementById(gcc.id); if(el) observer.observe(el); });
+
+}).catch(()=>{
+  sectionsEl.innerHTML=`<div style="padding:40px;font-family:monospace;color:#f05050">⚠ Map requires internet connection to load boundary data.</div>`;
+});
+</script>
+</body>
+</html>
