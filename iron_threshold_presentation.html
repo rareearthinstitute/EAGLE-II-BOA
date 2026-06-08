@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OPERATION IRON THRESHOLD</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --black: #030508;
+  --deep: #07090f;
+  --surface: #0c1018;
+  --indopacom: #a07cf4;
+  --orange: #ff6b35;
+  --amber: #f0a830;
+  --red: #ef4444;
+  --green: #22c55e;
+  --white: #f0f4ff;
+  --muted: #4a5270;
+  --mono: 'Share Tech Mono', monospace;
+  --display: 'Bebas Neue', sans-serif;
+  --body: 'Barlow', sans-serif;
+  --cond: 'Barlow Condensed', sans-serif;
+}
+
+html, body {
+  width: 100%; height: 100%;
+  background: var(--black);
+  color: var(--white);
+  font-family: var(--body);
+  overflow: hidden;
+  cursor: none;
+}
+
+/* ── CUSTOM CURSOR ── */
+.cursor {
+  position: fixed; width: 6px; height: 6px;
+  background: var(--indopacom); border-radius: 50%;
+  pointer-events: none; z-index: 9999;
+  transform: translate(-50%, -50%);
+  transition: transform 0.1s;
+  mix-blend-mode: screen;
+}
+
+/* ── SCANLINE OVERLAY ── */
+body::after {
+  content: '';
+  position: fixed; inset: 0; z-index: 9000;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+  pointer-events: none;
+}
+
+/* ── NOISE TEXTURE ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 8999;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  pointer-events: none;
+}
+
+/* ── SLIDE CONTAINER ── */
+#stage {
+  position: fixed; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.slide {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.05s;
+}
+.slide.active { opacity: 1; pointer-events: all; }
+
+/* ── PROGRESS BAR ── */
+#progress {
+  position: fixed; top: 0; left: 0; height: 2px;
+  background: var(--indopacom);
+  transition: width 0.4s ease;
+  z-index: 9001;
+  box-shadow: 0 0 8px var(--indopacom);
+}
+
+/* ── NAV HINT ── */
+#nav-hint {
+  position: fixed; bottom: 28px; right: 32px;
+  font-family: var(--mono); font-size: 10px; color: var(--muted);
+  letter-spacing: 0.1em; z-index: 9001;
+  display: flex; align-items: center; gap: 12px;
+}
+#slide-counter { color: var(--indopacom); }
+.nav-key {
+  border: 0.5px solid var(--muted); padding: 3px 7px; border-radius: 3px;
+  font-size: 9px; color: var(--muted);
+}
+
+/* ── CLASSIFICATION STRIP ── */
+.classif {
+  position: fixed; top: 0; left: 0; right: 0;
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.2em;
+  text-transform: uppercase; text-align: center;
+  padding: 6px; background: rgba(240,168,48,0.08);
+  border-bottom: 0.5px solid rgba(240,168,48,0.2);
+  color: rgba(240,168,48,0.6); z-index: 9001;
+}
+
+/* ══════════════════════════════════════════════════════════
+   SLIDE TYPES
+══════════════════════════════════════════════════════════ */
+
+/* ── TITLE SLIDE ── */
+.s-title {
+  background: var(--black);
+  flex-direction: column;
+  text-align: center;
+  padding: 60px 80px;
+}
+.s-title .pre-label {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.25em;
+  text-transform: uppercase; color: var(--amber); margin-bottom: 32px;
+  opacity: 0; animation: fadeUp 0.6s 0.3s forwards;
+}
+.s-title h1 {
+  font-family: var(--display); font-size: clamp(72px, 10vw, 140px);
+  letter-spacing: 0.06em; line-height: 0.9;
+  color: var(--white);
+  opacity: 0; animation: fadeUp 0.7s 0.6s forwards;
+}
+.s-title h1 span { color: var(--indopacom); }
+.s-title .subtitle {
+  font-family: var(--cond); font-size: clamp(14px, 2vw, 20px);
+  font-weight: 300; letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--muted); margin-top: 20px;
+  opacity: 0; animation: fadeUp 0.6s 0.9s forwards;
+}
+.title-line {
+  width: 0; height: 1px; background: var(--indopacom);
+  margin: 28px auto; animation: expandW 0.8s 1.2s forwards;
+  box-shadow: 0 0 12px var(--indopacom);
+}
+.s-title .meta-grid {
+  display: flex; gap: 48px; margin-top: 32px; justify-content: center; flex-wrap: wrap;
+  opacity: 0; animation: fadeUp 0.6s 1.5s forwards;
+}
+.meta-item { text-align: left; }
+.meta-label { font-family: var(--mono); font-size: 8px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 4px; }
+.meta-value { font-family: var(--cond); font-size: 14px; font-weight: 600; color: var(--white); }
+
+/* ── GRID BG for title ── */
+.grid-bg {
+  position: absolute; inset: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(160,124,244,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(160,124,244,0.04) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 0%, transparent 100%);
+}
+.glow-orb {
+  position: absolute; border-radius: 50%; pointer-events: none; filter: blur(120px);
+}
+
+/* ── SECTION HEADER SLIDE ── */
+.s-phase {
+  flex-direction: column; text-align: center; padding: 60px;
+  position: relative; overflow: hidden;
+}
+.s-phase .phase-num-bg {
+  position: absolute; font-family: var(--display);
+  font-size: clamp(300px, 40vw, 500px);
+  color: rgba(255,255,255,0.015);
+  line-height: 1; pointer-events: none;
+  letter-spacing: -0.05em;
+}
+.s-phase .phase-badge-big {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.2em;
+  text-transform: uppercase; padding: 6px 16px;
+  border-radius: 2px; margin-bottom: 24px;
+  opacity: 0; animation: fadeUp 0.5s 0.2s forwards;
+}
+.s-phase h2 {
+  font-family: var(--display); font-size: clamp(48px, 7vw, 96px);
+  letter-spacing: 0.06em; line-height: 1;
+  opacity: 0; animation: fadeUp 0.6s 0.4s forwards;
+}
+.s-phase .phase-sub {
+  font-family: var(--cond); font-size: clamp(14px, 2vw, 18px);
+  font-weight: 300; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--muted); margin-top: 16px; max-width: 700px;
+  opacity: 0; animation: fadeUp 0.5s 0.6s forwards;
+}
+.s-phase .phase-time-badge {
+  margin-top: 28px; font-family: var(--mono); font-size: 11px;
+  color: var(--amber); letter-spacing: 0.1em;
+  opacity: 0; animation: fadeUp 0.5s 0.8s forwards;
+}
+.phase-divider {
+  width: 0; height: 1px; margin: 20px auto;
+  animation: expandW 0.6s 0.5s forwards;
+}
+
+/* ── SITUATION SLIDE ── */
+.s-situation {
+  padding: 80px 100px; flex-direction: column; align-items: flex-start;
+  max-width: 1200px; margin: 0 auto;
+}
+.s-situation .sit-eyebrow {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 20px;
+  opacity: 0; animation: fadeUp 0.4s 0.1s forwards;
+}
+.s-situation .sit-title {
+  font-family: var(--cond); font-size: clamp(28px, 4vw, 48px);
+  font-weight: 700; letter-spacing: 0.04em; line-height: 1.1;
+  margin-bottom: 28px;
+  opacity: 0; animation: fadeUp 0.5s 0.3s forwards;
+}
+.s-situation .sit-body {
+  font-family: var(--body); font-size: clamp(14px, 1.6vw, 18px);
+  font-weight: 300; line-height: 1.75; color: rgba(240,244,255,0.85);
+  max-width: 900px; border-left: 2px solid var(--color, var(--indopacom));
+  padding-left: 24px;
+  opacity: 0; animation: fadeUp 0.6s 0.5s forwards;
+}
+.sit-timestamp {
+  font-family: var(--mono); font-size: 10px; color: var(--amber);
+  margin-bottom: 16px; letter-spacing: 0.1em;
+  opacity: 0; animation: fadeUp 0.4s 0.2s forwards;
+}
+
+/* ── INJECT SLIDE ── */
+.s-inject {
+  padding: 80px 100px; flex-direction: column; align-items: flex-start;
+  max-width: 1200px; margin: 0 auto; width: 100%;
+}
+.inject-label-top {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.2em;
+  text-transform: uppercase; margin-bottom: 16px;
+  opacity: 0; animation: fadeUp 0.3s 0.1s forwards;
+}
+.inject-id {
+  font-family: var(--display); font-size: clamp(36px, 5vw, 64px);
+  letter-spacing: 0.06em; margin-bottom: 20px;
+  opacity: 0; animation: fadeUp 0.5s 0.2s forwards;
+}
+.inject-source {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em;
+  text-transform: uppercase; margin-bottom: 24px; padding: 4px 10px;
+  border-left: 2px solid var(--color, var(--orange));
+  color: var(--color, var(--orange));
+  opacity: 0; animation: fadeUp 0.4s 0.3s forwards;
+}
+.inject-body {
+  font-size: clamp(15px, 1.7vw, 20px); font-weight: 300; line-height: 1.7;
+  color: rgba(240,244,255,0.9); max-width: 900px;
+  opacity: 0; animation: fadeUp 0.6s 0.4s forwards;
+}
+.inject-ils2-tag {
+  display: inline-block; margin-top: 20px; padding: 4px 12px;
+  background: rgba(160,124,244,0.15); border: 0.5px solid rgba(160,124,244,0.4);
+  border-radius: 2px; font-family: var(--mono); font-size: 9px;
+  color: var(--indopacom); letter-spacing: 0.1em; text-transform: uppercase;
+  opacity: 0; animation: fadeUp 0.4s 0.7s forwards;
+}
+
+/* ── QUESTION SLIDE ── */
+.s-question {
+  padding: 80px 100px; flex-direction: column; align-items: flex-start;
+  max-width: 1200px; margin: 0 auto; width: 100%;
+}
+.q-eyebrow {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 20px;
+  opacity: 0; animation: fadeUp 0.3s 0.1s forwards;
+}
+.q-num {
+  font-family: var(--display); font-size: clamp(80px, 12vw, 160px);
+  color: rgba(255,255,255,0.04); line-height: 1;
+  position: absolute; right: 80px; top: 50%; transform: translateY(-60%);
+  pointer-events: none; letter-spacing: -0.02em;
+}
+.q-text {
+  font-family: var(--cond); font-size: clamp(22px, 3vw, 38px);
+  font-weight: 400; line-height: 1.4; max-width: 820px;
+  opacity: 0; animation: fadeUp 0.6s 0.3s forwards;
+}
+.q-text em { color: var(--indopacom); font-style: normal; }
+.q-discuss {
+  margin-top: 28px; font-family: var(--mono); font-size: 10px;
+  color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase;
+  opacity: 0; animation: fadeUp 0.4s 0.7s forwards;
+  display: flex; align-items: center; gap: 10px;
+}
+.q-discuss::before { content:''; width: 30px; height: 1px; background: var(--muted); }
+
+/* ── STAT / CALLOUT SLIDE ── */
+.s-stat {
+  flex-direction: column; text-align: center; padding: 60px;
+  position: relative;
+}
+.stat-value {
+  font-family: var(--display); font-size: clamp(100px, 18vw, 220px);
+  letter-spacing: -0.02em; line-height: 0.9;
+  opacity: 0; animation: fadeUp 0.5s 0.2s forwards;
+}
+.stat-label {
+  font-family: var(--cond); font-size: clamp(18px, 2.5vw, 28px);
+  font-weight: 300; letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--muted); margin-top: 16px;
+  opacity: 0; animation: fadeUp 0.5s 0.5s forwards;
+}
+.stat-sub {
+  font-family: var(--mono); font-size: 11px; color: var(--muted);
+  margin-top: 10px; letter-spacing: 0.08em;
+  opacity: 0; animation: fadeUp 0.4s 0.7s forwards;
+}
+
+/* ── ILS2 STRATEGIC SLIDE ── */
+.s-ils2 {
+  padding: 80px 100px; flex-direction: column; align-items: flex-start;
+  max-width: 1200px; margin: 0 auto; width: 100%;
+}
+.ils2-header {
+  display: flex; align-items: center; gap: 16px; margin-bottom: 28px;
+  opacity: 0; animation: fadeUp 0.5s 0.2s forwards;
+}
+.ils2-badge {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em;
+  text-transform: uppercase; padding: 4px 10px;
+  background: rgba(160,124,244,0.15); border: 0.5px solid rgba(160,124,244,0.4);
+  color: var(--indopacom); border-radius: 2px;
+}
+.ils2-title {
+  font-family: var(--display); font-size: clamp(40px, 5.5vw, 72px);
+  letter-spacing: 0.06em; color: var(--indopacom);
+  opacity: 0; animation: fadeUp 0.6s 0.3s forwards;
+  line-height: 1;
+}
+.ils2-task-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+  margin-top: 24px; width: 100%;
+  opacity: 0; animation: fadeUp 0.6s 0.5s forwards;
+}
+.ils2-task {
+  padding: 14px 16px; background: rgba(160,124,244,0.06);
+  border: 0.5px solid rgba(160,124,244,0.2); border-radius: 4px;
+}
+.task-num { font-family: var(--mono); font-size: 8px; color: var(--indopacom); letter-spacing: 0.1em; margin-bottom: 5px; }
+.task-name { font-family: var(--cond); font-size: 14px; font-weight: 600; color: var(--white); }
+.task-desc { font-size: 11px; color: var(--muted); margin-top: 4px; line-height: 1.4; }
+
+/* ── CLOSING SLIDE ── */
+.s-close {
+  flex-direction: column; text-align: center; padding: 60px; position: relative;
+}
+.s-close h2 {
+  font-family: var(--display); font-size: clamp(60px, 9vw, 120px);
+  letter-spacing: 0.06em; line-height: 1;
+  opacity: 0; animation: fadeUp 0.6s 0.3s forwards;
+}
+.s-close .close-sub {
+  font-family: var(--cond); font-size: clamp(14px, 2vw, 20px);
+  font-weight: 300; letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--muted); margin-top: 16px;
+  opacity: 0; animation: fadeUp 0.5s 0.6s forwards;
+}
+.close-divider {
+  width: 0; height: 1px; background: var(--indopacom); margin: 24px auto;
+  animation: expandW 0.8s 0.9s forwards;
+  box-shadow: 0 0 12px var(--indopacom);
+}
+.s-close .close-doc {
+  font-family: var(--mono); font-size: 10px; color: var(--muted);
+  letter-spacing: 0.12em;
+  opacity: 0; animation: fadeUp 0.4s 1.2s forwards;
+}
+
+/* ── KEYFRAMES ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes expandW {
+  from { width: 0; }
+  to   { width: 200px; }
+}
+@keyframes blink {
+  0%,100% { opacity: 1; } 50% { opacity: 0; }
+}
+@keyframes glitch {
+  0%   { transform: translate(0); }
+  20%  { transform: translate(-2px, 1px); }
+  40%  { transform: translate(2px, -1px); }
+  60%  { transform: translate(-1px, 2px); }
+  80%  { transform: translate(1px, -2px); }
+  100% { transform: translate(0); }
+}
+@keyframes pulse-glow {
+  0%,100% { box-shadow: 0 0 8px var(--indopacom); }
+  50%      { box-shadow: 0 0 24px var(--indopacom), 0 0 48px rgba(160,124,244,0.3); }
+}
+
+/* ── FLASH TRANSITION ── */
+#flash {
+  position: fixed; inset: 0; background: var(--white);
+  opacity: 0; pointer-events: none; z-index: 8998;
+  transition: opacity 0.08s;
+}
+#flash.on { opacity: 0.04; }
+
+/* ── AUTO-PLAY INDICATOR ── */
+#autoplay-bar {
+  position: fixed; bottom: 0; left: 0; height: 2px;
+  background: rgba(160,124,244,0.3); z-index: 9001;
+  display: none;
+}
+#autoplay-fill {
+  height: 100%; background: var(--indopacom);
+  transition: width linear;
+}
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div id="flash"></div>
+<div id="progress"></div>
+<div class="classif">UNCLASSIFIED // FOR OFFICIAL USE ONLY // EXERCISE — OPERATION IRON THRESHOLD</div>
+
+<div id="stage"></div>
+
+<div id="nav-hint">
+  <span class="nav-key">←</span>
+  <span class="nav-key">→</span>
+  <span style="margin:0 4px">navigate</span>
+  <span class="nav-key">SPACE</span>
+  <span>autoplay</span>
+  <span class="nav-key">F</span>
+  <span>fullscreen</span>
+  &nbsp;·&nbsp;
+  <span id="slide-counter">1 / 1</span>
+</div>
+
+<div id="autoplay-bar"><div id="autoplay-fill"></div></div>
+
+<script>
+// ── SLIDE DATA ─────────────────────────────────────────────────────────────
+const SLIDES = [
+
+  // 0 — TITLE
+  { type:'title' },
+
+  // 1 — SETTING THE STAGE
+  { type:'stat', value:'36,000', label:'Personnel at Risk', sub:'Camp Humphreys · Largest US Overseas Installation · 65km from the DMZ', color:'var(--indopacom)' },
+
+  // 2 — CONTEXT
+  { type:'situation',
+    eyebrow:'Theater Context',
+    timestamp:'Ulchi Freedom Shield — Day 3 · Peak Installation Density',
+    title:'A Peer Adversary Is Already Inside',
+    body:'The Reconnaissance General Bureau has pre-positioned malware in V2X\'s LOGCAP facilities management platform for 60 days. Food service. Water treatment. Power monitoring. The systems that keep 36,000 people alive on the Korean Peninsula — all running on a single commercial contractor platform. Tonight, the attack executes.',
+    color:'var(--indopacom)'
+  },
+
+  // 3 — PHASE 1 HEADER
+  { type:'phase', num:'01', badge:'WARNING', badgeColor:'rgba(240,168,48,0.15)', badgeText:'#f0a830',
+    title:'FIRST INDICATION', sub:'Anomalous System Behavior During Peak Exercise Tempo',
+    time:'H+0:00 — H+0:45', lineColor:'var(--amber)' },
+
+  // 4 — INJECT 1-A
+  { type:'inject', label:'Inject 1-A · H+0:15', id:'SYSTEM INTRUSION', source:'V2X IT Administrator → Duty Officer',
+    body:'Remote access logs show three authentication attempts from an IP block associated with a third-party software vendor. The vendor\'s helpdesk has no record of any maintenance activity scheduled for that night. 4.7GB of data — power grid schematics, water system diagrams, DFAC capacity records — transmitted to an external address with known RGB indicators.',
+    color:'var(--amber)' },
+
+  // 5 — INJECT 1-B
+  { type:'inject', label:'Inject 1-B · H+0:25', id:'DEPLOYMENT AT RISK', source:'DFAC Manager → G4',
+    body:'Without the scheduling platform, the manager cannot verify meal authorization cards for the 0600 breakfast service. Cannot confirm food inventory for 4,800 scheduled diners. Cannot guarantee food safety compliance under AR 30-22. 36,000 people wake up in four hours expecting breakfast.',
+    color:'var(--orange)' },
+
+  // 6 — QUESTION 1
+  { type:'question', num:'01',
+    text:'It is 0300 local. The contracting officer at ACC-Rock Island is asleep in Illinois. <em>Who has authority to make decisions about V2X\'s contract performance and system isolation right now — tonight?</em>',
+    color:'var(--amber)' },
+
+  // 7 — QUESTION 2
+  { type:'question', num:'02',
+    text:'ARCYBER wants the V2X network isolated. Isolation takes down water treatment monitoring. <em>Do you comply? What is the decision authority chain at 0300 Korean time?</em>',
+    color:'var(--amber)' },
+
+  // 8 — PHASE 2 HEADER
+  { type:'phase', num:'02', badge:'CRITICAL', badgeColor:'rgba(239,68,68,0.15)', badgeText:'#ef4444',
+    title:'CASCADE', sub:'Life Support Degradation and Combined Command Friction',
+    time:'H+0:45 — H+1:45', lineColor:'var(--red)' },
+
+  // 9 — STAT
+  { type:'stat', value:'96h', label:'To Full System Restoration', sub:'V2X Corporate Incident Response · Zero Manual Fallback in Contract', color:'var(--red)' },
+
+  // 10 — INJECT 2-A
+  { type:'inject', label:'Inject 2-A · H+0:50', id:'SYSTEM SHUTDOWN', source:'V2X Corporate HQ → COR',
+    body:'V2X activates full system shutdown per cyber incident protocol. ALL LRC digital systems offline for minimum 72 hours while forensics are conducted. No manual workaround plan exists in the current contract. The facilities management platform that feeds every DFAC, monitors every water line, and tracks every generator — dark.',
+    color:'var(--red)' },
+
+  // 11 — INJECT 2-B DIA
+  { type:'inject', label:'Inject 2-B · H+1:10', id:'DIA FLASH', source:'Defense Intelligence Agency → XVIII Corps G2',
+    body:'TTPs observed are consistent with a known DPRK threat actor that has previously targeted U.S. Army pre-deployment logistics data to assess readiness timelines. Current intelligence indicates TALISMAN SABER begins in 11 days. The adversary is watching INDOPACOM.',
+    color:'var(--red)' },
+
+  // 12 — INJECT ILS2
+  { type:'inject', label:'Inject 2-D · ILS2 · H+1:40', id:'ILS2 PARALLEL', source:'USINDOPACOM J4 Staff',
+    body:'ILS2 Task 2 — commercial maritime and port logistics support — was designed specifically to provide an alternative, commercially-resilient supply chain for SOCPAC that does not depend on a single LOGCAP prime. One ILS2 offeror has confirmed Pacific port access across South Korea, Japan, and the Philippines. Does this incident accelerate the ILS2 requirement?',
+    color:'var(--indopacom)', ils2:true },
+
+  // 13 — QUESTION 5
+  { type:'question', num:'05',
+    text:'V2X is invoking Force Majeure. Your LOGCAP COR says it doesn\'t apply. <em>Who makes a real-time contract interpretation call during a live incident when the Contracting Officer is CONUS?</em>',
+    color:'var(--red)' },
+
+  // 14 — PHASE 3 HEADER
+  { type:'phase', num:'03', badge:'DECISION', badgeColor:'rgba(160,124,244,0.15)', badgeText:'#a07cf4',
+    title:'DECISION POINT', sub:'SOFA Friction · Emergency Contracting · INDOPACOM Visibility',
+    time:'H+1:45 — H+2:45', lineColor:'var(--indopacom)' },
+
+  // 15 — INJECT 3-B SOFA
+  { type:'inject', label:'Inject 3-B · H+2:10', id:'ALLIANCE FRICTION', source:'ROK MND → US Ambassador → USFK',
+    body:'ROK Ministry of National Defense formally requests a briefing on the incident through the SOFA Joint Committee. The ROK Defense Minister has raised the incident with the U.S. Ambassador in Seoul, citing concerns about the vulnerability of the Combined Defense posture. The Blue House is watching.',
+    color:'var(--indopacom)' },
+
+  // 16 — INJECT 3-C NSC
+  { type:'inject', label:'Inject 3-C · H+2:35', id:'NSC ENGAGED', source:'NSC Senior Director for Asia → INDOPACOM',
+    body:'The President has been briefed. NSC wants to know whether this incident represents a material degradation in USFK\'s ability to execute its wartime Combined Defense Plan mission. The question is being asked in the context of ongoing diplomatic talks with Seoul about USFK burden-sharing.',
+    color:'var(--indopacom)' },
+
+  // 17 — INJECT ILS2 PHASE 3
+  { type:'inject', label:'Inject 3-D · ILS2 · H+2:40', id:'TOR AMENDMENT?', source:'SOCPAC J4 → USINDOPACOM',
+    body:'SOCPAC wants to amend ILS2 TOR 47QFCA26R0025 before proposal release to add a COOP logistics function — a standby capability that can be activated when LOGCAP is degraded. This requires a TOR amendment and potentially delays the September 2026 proposal opening. <br><br>Do you delay the competition to add the requirement the attack just made visible?',
+    color:'var(--indopacom)', ils2:true },
+
+  // 18 — QUESTION 11
+  { type:'question', num:'11',
+    text:'NSC wants to know if this is a material degradation to the Combined Defense Plan. <em>What is your honest assessment — and how do you communicate it without triggering escalation or losing credibility?</em>',
+    color:'var(--indopacom)' },
+
+  // 19 — PHASE 4 HEADER
+  { type:'phase', num:'04', badge:'RECOVERY', badgeColor:'rgba(34,197,94,0.15)', badgeText:'#22c55e',
+    title:'RECOVERY', sub:'Reconstitution · Alliance Management · Institutional Reform',
+    time:'H+2:45 — H+4:00', lineColor:'var(--green)' },
+
+  // 20 — STAT RECOVERY
+  { type:'stat', value:'85%', label:'System Functionality Restored at H+96', sub:'V2X forensic rebuild · AMC MLST bridged critical gaps · No missed meal services after Day 1', color:'var(--green)' },
+
+  // 21 — INJECT ILS2 PHASE 4
+  { type:'inject', label:'Inject 4-D · ILS2 · H+3:50', id:'CYBER EVAL FACTOR', source:'SOCPAC Program Office → Internal Review',
+    body:'ILS2 Task 4 — Installation Logistics Support — currently has no cybersecurity technical evaluation factor. Adding CMMC Level 2 compliance could narrow the competitive field and may require a 30-day industry comment period, potentially pushing the proposal opening past September 2026. <br><br>What is the cost of not adding it?',
+    color:'var(--indopacom)', ils2:true },
+
+  // 22 — PHASE 5 HEADER
+  { type:'phase', num:'05', badge:'ILS2 STRATEGIC', badgeColor:'rgba(160,124,244,0.2)', badgeText:'#a07cf4',
+    title:'ILS2 IMPLICATIONS', sub:'Rebuilding Theater Logistics Resilience · TOR 47QFCA26R0025',
+    time:'H+4:00 — H+5:00', lineColor:'var(--indopacom)' },
+
+  // 23 — ILS2 OVERVIEW
+  { type:'ils2' },
+
+  // 24 — INJECT 5-A
+  { type:'inject', label:'Inject 5-A · SOCPAC Program Office', id:'THREE AMENDMENTS', source:'Proposed TOR Modifications',
+    body:'1. Mandatory LOGCAP surge support capability — activate within 72 hours of LOGCAP failure.<br>2. All Task 3/4 contractor IT hosted on government-controlled cloud (IL4+), not commercial platforms.<br>3. Key Personnel requirement: Cyber Resilience Lead, active TS/SCI.<br><br>Estimated impact: +$15–25M ceiling · +45 day delay.',
+    color:'var(--indopacom)', ils2:true },
+
+  // 25 — INJECT 5-B MARITIME
+  { type:'inject', label:'Inject 5-B · Market Research', id:'MARITIME REACH', source:'INDOPACOM J4 Staff',
+    body:'Of OASIS+ CPAF holders likely to compete for ILS2, only two have demonstrated maritime logistics capability in the Western Pacific. One has confirmed port access across South Korea, Japan, the Philippines, and Pacific island chains. That maritime reach — the ability to sustain logistics without depending on fixed-base infrastructure — is precisely what the Humphreys attack demonstrated LOGCAP cannot provide.',
+    color:'var(--indopacom)', ils2:true },
+
+  // 26 — QUESTION 18
+  { type:'question', num:'18',
+    text:'The maritime logistics capability was a TOR requirement before the attack. <em>Does the attack change how SOCPAC should weight this discriminator? Make the case for elevating it from a technical factor to a mission-essential requirement.</em>',
+    color:'var(--indopacom)' },
+
+  // 27 — QUESTION 20
+  { type:'question', num:'20',
+    text:'Larger primes with legacy IT infrastructure are disadvantaged. A smaller SOF-experienced team with maritime reach and purpose-built cyber architecture may be better positioned. <em>How do you structure ILS2 evaluation to ensure the technically superior solution wins?</em>',
+    color:'var(--indopacom)' },
+
+  // 28 — QUESTION 21
+  { type:'question', num:'21',
+    text:'You are the SOCPAC Program Manager writing the ILS2 acquisition strategy memo the week after Humphreys. <em>Name three non-negotiable requirements — not factors, hard requirements — that every ILS2 offeror must meet.</em>',
+    color:'var(--indopacom)' },
+
+  // 29 — CLOSE
+  { type:'close' },
+];
+
+// ── RENDER ─────────────────────────────────────────────────────────────────
+const stage = document.getElementById('stage');
+
+function html_title() {
+  return `
+    <div class="slide s-title" id="slide-0">
+      <div class="grid-bg"></div>
+      <div class="glow-orb" style="width:600px;height:600px;background:rgba(160,124,244,0.08);top:50%;left:50%;transform:translate(-50%,-50%)"></div>
+      <div class="pre-label">Tabletop Exercise · INDOPACOM · Senior Leadership Wargaming Cell</div>
+      <h1>OPERATION<br><span>IRON</span><br>THRESHOLD</h1>
+      <div class="title-line"></div>
+      <div class="subtitle">Camp Humphreys, ROK · Gray-Zone Adversary Attack on LOGCAP Contractor Systems</div>
+      <div class="meta-grid">
+        <div class="meta-item"><div class="meta-label">Installation</div><div class="meta-value">Camp Humphreys</div></div>
+        <div class="meta-item"><div class="meta-label">Distance to DMZ</div><div class="meta-value">~65km</div></div>
+        <div class="meta-item"><div class="meta-label">Threat Actor</div><div class="meta-value">RGB / DPRK</div></div>
+        <div class="meta-item"><div class="meta-label">Contractor</div><div class="meta-value">V2X LOGCAP V</div></div>
+        <div class="meta-item"><div class="meta-label">ILS2 TOR</div><div class="meta-value">47QFCA26R0025</div></div>
+      </div>
+    </div>`;
+}
+
+function html_stat(s) {
+  return `
+    <div class="slide s-stat">
+      <div class="glow-orb" style="width:500px;height:500px;background:${s.color}18;top:50%;left:50%;transform:translate(-50%,-50%);filter:blur(100px)"></div>
+      <div class="stat-value" style="color:${s.color}">${s.value}</div>
+      <div class="stat-label">${s.label}</div>
+      <div class="stat-sub">${s.sub}</div>
+    </div>`;
+}
+
+function html_phase(s) {
+  return `
+    <div class="slide s-phase">
+      <div class="phase-num-bg">${s.num}</div>
+      <div class="glow-orb" style="width:400px;height:400px;background:${s.lineColor}12;top:50%;left:50%;transform:translate(-50%,-50%);filter:blur(80px)"></div>
+      <div class="phase-badge-big" style="background:${s.badgeColor};color:${s.badgeText};border:0.5px solid ${s.badgeText}40">${s.badge}</div>
+      <h2 style="color:${s.badgeText}">${s.title}</h2>
+      <div class="phase-divider" style="background:${s.lineColor};box-shadow:0 0 10px ${s.lineColor}"></div>
+      <div class="phase-sub">${s.sub}</div>
+      <div class="phase-time-badge">${s.time}</div>
+    </div>`;
+}
+
+function html_situation(s) {
+  return `
+    <div class="slide s-situation">
+      <div class="sit-eyebrow">${s.eyebrow}</div>
+      <div class="sit-timestamp">${s.timestamp}</div>
+      <div class="sit-title">${s.title}</div>
+      <div class="sit-body" style="--color:${s.color}">${s.body}</div>
+    </div>`;
+}
+
+function html_inject(s) {
+  return `
+    <div class="slide s-inject">
+      <div class="inject-label-top" style="color:${s.color}">${s.label}</div>
+      <div class="inject-id" style="color:${s.color}">${s.id}</div>
+      <div class="inject-source" style="--color:${s.color};border-left-color:${s.color}">${s.source}</div>
+      <div class="inject-body">${s.body}</div>
+      ${s.ils2 ? '<div class="inject-ils2-tag">⬡ ILS2 TOR 47QFCA26R0025 — DIRECT IMPLICATION</div>' : ''}
+    </div>`;
+}
+
+function html_question(s) {
+  return `
+    <div class="slide s-question">
+      <div class="q-eyebrow">Discussion Question ${s.num}</div>
+      <div class="q-num">${s.num}</div>
+      <div class="q-text">${s.text}</div>
+      <div class="q-discuss">Open for group discussion</div>
+    </div>`;
+}
+
+function html_ils2() {
+  return `
+    <div class="slide s-ils2">
+      <div class="ils2-header">
+        <div class="ils2-badge">ILS2 · TOR 47QFCA26R0025</div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--muted)">OASIS+ CPAF · ~$180–220M · Proposals Sep 2026</div>
+      </div>
+      <div class="ils2-title">WHAT ILS2 WAS<br>DESIGNED TO FIX</div>
+      <div class="ils2-task-grid">
+        <div class="ils2-task">
+          <div class="task-num">TASK 01</div>
+          <div class="task-name">Program Management</div>
+          <div class="task-desc">Integration & oversight across SOCPAC/INDOPACOM AOR</div>
+        </div>
+        <div class="ils2-task" style="border-color:rgba(160,124,244,0.5);background:rgba(160,124,244,0.1)">
+          <div class="task-num">TASK 02 ★</div>
+          <div class="task-name">Maritime Supply Chain</div>
+          <div class="task-desc">Commercial COCO · Pacific port access · alternative to LOGCAP fixed-base</div>
+        </div>
+        <div class="ils2-task">
+          <div class="task-num">TASK 03</div>
+          <div class="task-name">Facilities & Base Ops</div>
+          <div class="task-desc">Installation operations support across theater</div>
+        </div>
+        <div class="ils2-task" style="border-color:rgba(160,124,244,0.5);background:rgba(160,124,244,0.1)">
+          <div class="task-num">TASK 04 ★</div>
+          <div class="task-name">Installation Logistics</div>
+          <div class="task-desc">EAGLE-equivalent at SOCPAC installations · cyber resilience gap now exposed</div>
+        </div>
+        <div class="ils2-task">
+          <div class="task-num">TASK 05</div>
+          <div class="task-name">Training & Exercise</div>
+          <div class="task-desc">Exercise logistics support · TALISMAN SABER · bilateral ops</div>
+        </div>
+        <div class="ils2-task" style="border-color:rgba(160,124,244,0.5);background:rgba(160,124,244,0.08)">
+          <div class="task-num" style="color:#f0a830">KEY DISCRIMINATOR</div>
+          <div class="task-name" style="color:#a07cf4">Maritime + Cyber + LOGCAP Surge</div>
+          <div class="task-desc">What the Humphreys attack proved the theater needs</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function html_close() {
+  return `
+    <div class="slide s-close">
+      <div class="grid-bg"></div>
+      <div class="glow-orb" style="width:600px;height:600px;background:rgba(160,124,244,0.06);top:50%;left:50%;transform:translate(-50%,-50%)"></div>
+      <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.2em;color:var(--muted);margin-bottom:24px;opacity:0;animation:fadeUp 0.4s 0.2s forwards">After Action</div>
+      <h2>WHAT DID<br>IRON THRESHOLD<br><span style="color:var(--indopacom)">EXPOSE?</span></h2>
+      <div class="close-divider"></div>
+      <div class="close-sub">Three institutional failures · Three ILS2 non-negotiables · One acquisition strategy memo</div>
+      <div style="margin-top:32px;display:flex;gap:32px;justify-content:center;flex-wrap:wrap;opacity:0;animation:fadeUp 0.5s 1.4s forwards">
+        <div style="text-align:left">
+          <div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.12em;margin-bottom:6px">TOR REFERENCE</div>
+          <div style="font-family:var(--cond);font-size:14px;color:var(--indopacom)">47QFCA26R0025</div>
+          <div style="font-family:var(--mono);font-size:9px;color:var(--muted)">Proposals: September 2026</div>
+        </div>
+        <div style="text-align:left">
+          <div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.12em;margin-bottom:6px">CLASSIFICATION</div>
+          <div style="font-family:var(--cond);font-size:14px;color:var(--amber)">UNCLASSIFIED // FOUO</div>
+          <div style="font-family:var(--mono);font-size:9px;color:var(--muted)">EXERCISE USE ONLY</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderSlide(s, idx) {
+  let html = '';
+  switch(s.type) {
+    case 'title':     html = html_title(); break;
+    case 'stat':      html = html_stat(s); break;
+    case 'phase':     html = html_phase(s); break;
+    case 'situation': html = html_situation(s); break;
+    case 'inject':    html = html_inject(s); break;
+    case 'question':  html = html_question(s); break;
+    case 'ils2':      html = html_ils2(); break;
+    case 'close':     html = html_close(); break;
+  }
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML = html;
+  const slide = wrapper.firstElementChild;
+  slide.id = `slide-${idx}`;
+  return slide;
+}
+
+// Build all slides
+SLIDES.forEach((s, i) => {
+  stage.appendChild(renderSlide(s, i));
+});
+
+// ── NAVIGATION ──────────────────────────────────────────────────────────────
+let current = 0;
+const total = SLIDES.length;
+let autoplay = false;
+let autoTimer = null;
+let autoFill = null;
+const AUTOPLAY_DURATION = 8000;
+
+function showSlide(n, dir = 1) {
+  const prev = document.getElementById(`slide-${current}`);
+  current = Math.max(0, Math.min(n, total - 1));
+  const next = document.getElementById(`slide-${current}`);
+
+  // Flash
+  const flash = document.getElementById('flash');
+  flash.classList.add('on');
+  setTimeout(() => flash.classList.remove('on'), 80);
+
+  if (prev) prev.classList.remove('active');
+  next.classList.remove('active');
+  // Force reflow for re-animation
+  void next.offsetWidth;
+  next.classList.add('active');
+
+  // Progress bar
+  document.getElementById('progress').style.width = `${((current+1)/total)*100}%`;
+  // Counter
+  document.getElementById('slide-counter').textContent = `${current+1} / ${total}`;
+
+  // Autoplay bar
+  if (autoplay) resetAutoFill();
+}
+
+function resetAutoFill() {
+  const bar = document.getElementById('autoplay-bar');
+  const fill = document.getElementById('autoplay-fill');
+  bar.style.display = 'block';
+  fill.style.transition = 'none';
+  fill.style.width = '0%';
+  void fill.offsetWidth;
+  fill.style.transition = `width ${AUTOPLAY_DURATION}ms linear`;
+  fill.style.width = '100%';
+}
+
+function startAutoplay() {
+  autoplay = true;
+  resetAutoFill();
+  autoTimer = setInterval(() => {
+    if (current < total - 1) showSlide(current + 1);
+    else stopAutoplay();
+  }, AUTOPLAY_DURATION);
+}
+
+function stopAutoplay() {
+  autoplay = false;
+  clearInterval(autoTimer);
+  document.getElementById('autoplay-bar').style.display = 'none';
+  document.getElementById('autoplay-fill').style.width = '0%';
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+    stopAutoplay(); showSlide(current + 1, 1);
+  } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+    stopAutoplay(); showSlide(current - 1, -1);
+  } else if (e.key === ' ') {
+    e.preventDefault();
+    autoplay ? stopAutoplay() : startAutoplay();
+  } else if (e.key === 'f' || e.key === 'F') {
+    document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+  } else if (e.key === 'Home') {
+    stopAutoplay(); showSlide(0);
+  } else if (e.key === 'End') {
+    stopAutoplay(); showSlide(total - 1);
+  }
+});
+
+// Click to advance
+stage.addEventListener('click', e => {
+  if (e.clientX > window.innerWidth / 2) {
+    stopAutoplay(); showSlide(current + 1, 1);
+  } else {
+    stopAutoplay(); showSlide(current - 1, -1);
+  }
+});
+
+// Cursor
+const cursor = document.getElementById('cursor');
+document.addEventListener('mousemove', e => {
+  cursor.style.left = e.clientX + 'px';
+  cursor.style.top = e.clientY + 'px';
+});
+
+// Init
+showSlide(0);
+</script>
+</body>
+</html>
