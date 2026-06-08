@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EAGLE / EAGLE II BOA — Awardee Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0f14;
+    --bg-surface: #141720;
+    --bg-elevated: #1c2030;
+    --bg-hover: #222840;
+    --border: rgba(255,255,255,0.07);
+    --border-active: rgba(255,255,255,0.18);
+    --text-primary: #e8eaf0;
+    --text-secondary: #7a8099;
+    --text-muted: #3d4460;
+    --accent-blue: #4a7cff;
+    --accent-blue-dim: rgba(74,124,255,0.12);
+    --accent-green: #3dba8a;
+    --accent-green-dim: rgba(61,186,138,0.12);
+    --accent-amber: #e8a438;
+    --accent-amber-dim: rgba(232,164,56,0.12);
+    --accent-purple: #9b7eee;
+    --accent-purple-dim: rgba(155,126,238,0.12);
+    --accent-red: #e85858;
+    --accent-red-dim: rgba(232,88,88,0.12);
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 10px;
+  }
+
+  html { font-size: 14px; }
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page-wrap {
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 40px 28px 80px;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 36px;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .header-left {}
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent-blue);
+    margin-bottom: 10px;
+  }
+  h1 {
+    font-size: 22px;
+    font-weight: 300;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+  h1 strong { font-weight: 500; }
+  .subtitle {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 6px;
+    font-weight: 300;
+  }
+  .header-meta {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    text-align: right;
+    line-height: 1.8;
+    flex-shrink: 0;
+  }
+  .header-meta span { display: block; }
+
+  /* Stats row */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .stat-card {
+    background: var(--bg-surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px 18px;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent-color, var(--accent-blue));
+    opacity: 0.6;
+  }
+  .stat-card .s-label {
+    font-size: 10px;
+    font-family: var(--mono);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+  }
+  .stat-card .s-value {
+    font-size: 26px;
+    font-weight: 300;
+    color: var(--text-primary);
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  .stat-card .s-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    font-family: var(--mono);
+  }
+
+  /* Controls */
+  .controls-bar {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .control-group { display: flex; flex-direction: column; gap: 5px; }
+  .control-group label {
+    font-size: 10px;
+    font-family: var(--mono);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  select, input[type="text"] {
+    background: var(--bg-surface);
+    border: 0.5px solid var(--border-active);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-family: var(--sans);
+    font-size: 12px;
+    padding: 7px 10px;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.15s;
+    -webkit-appearance: none;
+  }
+  select:focus, input[type="text"]:focus { border-color: var(--accent-blue); }
+  select { padding-right: 28px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%237a8099'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; }
+
+  .search-wrap { flex: 1; min-width: 180px; }
+  .search-wrap input { width: 100%; }
+
+  .controls-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .row-count {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+  .btn-reset {
+    background: none;
+    border: 0.5px solid var(--border-active);
+    color: var(--text-secondary);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 7px 12px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-reset:hover { border-color: var(--accent-blue); color: var(--accent-blue); }
+
+  /* Table */
+  .table-wrap {
+    background: var(--bg-surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  .table-scroll { overflow-x: auto; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+  }
+
+  thead th {
+    background: var(--bg-elevated);
+    padding: 11px 14px;
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    border-bottom: 0.5px solid var(--border);
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.15s;
+  }
+  thead th:hover { color: var(--text-primary); }
+  thead th.sorted { color: var(--accent-blue); }
+  .sort-icon { margin-left: 5px; opacity: 0.5; font-size: 9px; }
+  thead th.sorted .sort-icon { opacity: 1; }
+
+  tbody tr {
+    border-bottom: 0.5px solid var(--border);
+    transition: background 0.1s;
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--bg-hover); }
+
+  td {
+    padding: 11px 14px;
+    vertical-align: middle;
+    color: var(--text-primary);
+    line-height: 1.4;
+  }
+
+  /* Badges */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    padding: 3px 8px;
+    border-radius: 99px;
+    white-space: nowrap;
+  }
+  .badge-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+  .b-anc { background: var(--accent-purple-dim); color: var(--accent-purple); }
+  .b-anc .badge-dot { background: var(--accent-purple); }
+  .b-sdvosb { background: var(--accent-green-dim); color: var(--accent-green); }
+  .b-sdvosb .badge-dot { background: var(--accent-green); }
+  .b-sb { background: var(--accent-amber-dim); color: var(--accent-amber); }
+  .b-sb .badge-dot { background: var(--accent-amber); }
+
+  .status-badge {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: var(--radius-sm);
+    white-space: nowrap;
+  }
+  .s-active { background: var(--accent-green-dim); color: var(--accent-green); }
+  .s-expiring { background: var(--accent-amber-dim); color: var(--accent-amber); }
+  .s-boaonly { background: rgba(255,255,255,0.05); color: var(--text-secondary); }
+
+  /* AOR highlight */
+  .aor-northcom {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--accent-blue);
+    font-weight: 500;
+  }
+  .aor-northcom::before {
+    content: '';
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--accent-blue);
+    flex-shrink: 0;
+  }
+  .aor-other { font-family: var(--mono); font-size: 10px; color: var(--text-muted); }
+
+  /* Value bar */
+  .val-wrap { display: flex; align-items: center; gap: 8px; }
+  .val-bar-bg { width: 70px; height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px; flex-shrink: 0; }
+  .val-bar { height: 4px; border-radius: 2px; background: var(--accent-blue); }
+  .val-text { font-family: var(--mono); font-size: 11px; color: var(--text-primary); white-space: nowrap; }
+  .val-na { font-family: var(--mono); font-size: 10px; color: var(--text-muted); }
+
+  /* Company cell */
+  .company-name { font-weight: 500; color: var(--text-primary); font-size: 12.5px; }
+  .company-sub { font-size: 11px; color: var(--text-secondary); margin-top: 1px; font-family: var(--mono); }
+
+  /* Vehicle pill */
+  .vehicle-tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    border: 0.5px solid var(--border-active);
+    border-radius: var(--radius-sm);
+    padding: 2px 7px;
+    white-space: nowrap;
+  }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 56px 24px;
+    color: var(--text-muted);
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.05em;
+  }
+
+  /* Divider line */
+  .section-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 28px 0 16px;
+  }
+  .divider-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+  .divider-line { flex: 1; height: 0.5px; background: var(--border); }
+
+  /* Footer */
+  .footer {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 0.5px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .footer-note {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    line-height: 1.8;
+    max-width: 600px;
+  }
+  .footer-note strong { color: var(--text-secondary); font-weight: 500; }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-secondary);
+  }
+
+  @media (max-width: 768px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .controls-bar { flex-direction: column; align-items: stretch; }
+    .controls-right { margin-left: 0; }
+    h1 { font-size: 18px; }
+    td, thead th { padding: 9px 10px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-wrap">
+
+  <header class="header">
+    <div class="header-left">
+      <div class="eyebrow">Intelligence Brief — Army Acquisition</div>
+      <h1>EAGLE / EAGLE II BOA<br><strong>Awardee Landscape</strong></h1>
+      <p class="subtitle">Enhanced Army Global Logistics Enterprise — Installation logistics task order holders &amp; BOA incumbents</p>
+    </div>
+    <div class="header-meta">
+      <span>Vehicle: W52P1J-17 / W519TC-25-R-0044</span>
+      <span>Authority: ACC-Rock Island</span>
+      <span>NAICS: 561210</span>
+      <span>Set-aside: Total SB (EAGLE II)</span>
+      <span>Compiled: June 2026</span>
+    </div>
+  </header>
+
+  <div class="stats-grid" id="stats-grid">
+    <div class="stat-card" style="--accent-color: var(--accent-blue)">
+      <div class="s-label">Total entries</div>
+      <div class="s-value" id="s-total">—</div>
+      <div class="s-sub">task orders + BOA holdings</div>
+    </div>
+    <div class="stat-card" style="--accent-color: var(--accent-green)">
+      <div class="s-label">Disclosed ceiling</div>
+      <div class="s-value" id="s-total-val">—</div>
+      <div class="s-sub">across all disclosed awards</div>
+    </div>
+    <div class="stat-card" style="--accent-color: var(--accent-amber)">
+      <div class="s-label">NORTHCOM entries</div>
+      <div class="s-value" id="s-northcom">—</div>
+      <div class="s-sub">installations in AOR</div>
+    </div>
+    <div class="stat-card" style="--accent-color: var(--accent-purple)">
+      <div class="s-label">Unique parent firms</div>
+      <div class="s-value" id="s-firms">—</div>
+      <div class="s-sub">primes + ANC/tribal parents</div>
+    </div>
+  </div>
+
+  <div class="section-divider">
+    <span class="divider-label">Filters &amp; search</span>
+    <span class="divider-line"></span>
+  </div>
+
+  <div class="controls-bar">
+    <div class="control-group search-wrap">
+      <label>Search</label>
+      <input type="text" id="search" placeholder="Company, installation, parent…">
+    </div>
+    <div class="control-group">
+      <label>AOR</label>
+      <select id="f-aor">
+        <option value="">All AORs</option>
+        <option value="NORTHCOM">NORTHCOM</option>
+        <option value="FORSCOM">FORSCOM</option>
+        <option value="Multi">Multi-AOR</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label>Firm type</label>
+      <select id="f-type">
+        <option value="">All types</option>
+        <option value="ANC 8(a)">ANC 8(a)</option>
+        <option value="SDVOSB">SDVOSB</option>
+        <option value="Small Business">Small Business</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label>Status</label>
+      <select id="f-status">
+        <option value="">All</option>
+        <option value="Active">Active</option>
+        <option value="Expiring">Expiring</option>
+        <option value="BOA only">BOA only</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label>Vehicle</label>
+      <select id="f-vehicle">
+        <option value="">All vehicles</option>
+        <option value="EAGLE II BOA">EAGLE II BOA</option>
+        <option value="EAGLE BOA">EAGLE BOA (original)</option>
+        <option value="Other">Other</option>
+        <option value="Both">Both</option>
+      </select>
+    </div>
+    <div class="controls-right">
+      <span class="row-count" id="row-count"></span>
+      <button class="btn-reset" id="btn-reset">↺ Reset</button>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th data-col="company">Operating entity <span class="sort-icon">↕</span></th>
+            <th data-col="type">Type <span class="sort-icon">↕</span></th>
+            <th data-col="parent">Parent <span class="sort-icon">↕</span></th>
+            <th data-col="site">Installation(s) <span class="sort-icon">↕</span></th>
+            <th data-col="aor">AOR <span class="sort-icon">↕</span></th>
+            <th data-col="value">Ceiling <span class="sort-icon">↓</span></th>
+            <th data-col="period">Period <span class="sort-icon">↕</span></th>
+            <th data-col="status">Status <span class="sort-icon">↕</span></th>
+            <th data-col="vehicle">Vehicle <span class="sort-icon">↕</span></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-note">
+      <strong>Sources:</strong> DoD contract announcements, company press releases, GAO bid protest decisions, SAM.gov award notices, acc.army.mil/eagle. Ceiling values reflect total contract value including all option periods. <strong>Not disclosed</strong> = confirmed via protest record, job postings, or press release without a stated value. V2X/Vectrus entries reflect the original EAGLE BOA (large-business eligible); all other entries are under the small-business-set-aside EAGLE II BOA or adjacent vehicles. <strong>For official award data:</strong> USASpending.gov, parent IDV W52P1J-17 or W519TC-25.
+    </div>
+    <div class="legend">
+      <div class="legend-item"><span style="width:5px;height:5px;border-radius:50%;background:var(--accent-purple);"></span> ANC 8(a)</div>
+      <div class="legend-item"><span style="width:5px;height:5px;border-radius:50%;background:var(--accent-green);"></span> SDVOSB</div>
+      <div class="legend-item"><span style="width:5px;height:5px;border-radius:50%;background:var(--accent-amber);"></span> Small Business</div>
+      <div class="legend-item"><span style="width:5px;height:5px;border-radius:50%;background:var(--accent-blue);"></span> NORTHCOM</div>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+const MAX_BAR_VAL = 593;
+
+const DATA = [
+  { company: "Akima Support Operations", type: "ANC 8(a)", parent: "Akima / NANA", site: "Fort Cavazos (Hood), TX", aor: "NORTHCOM", value: 101, period: "2020–2025", status: "Expiring", vehicle: "EAGLE BOA" },
+  { company: "Sunik (Akima subsidiary)", type: "ANC 8(a)", parent: "Akima / NANA", site: "Fort Carson, CO", aor: "NORTHCOM", value: 85, period: "2022–2027", status: "Active", vehicle: "EAGLE II BOA" },
+  { company: "Sunik (Akima subsidiary)", type: "ANC 8(a)", parent: "Akima / NANA", site: "Fort Stewart, GA", aor: "FORSCOM", value: 44, period: "2022–2027", status: "Active", vehicle: "EAGLE II BOA" },
+  { company: "Akima Facilities Operations", type: "ANC 8(a)", parent: "Akima / NANA", site: "West Point, NY", aor: "NORTHCOM", value: null, period: "Ongoing", status: "Active", vehicle: "EAGLE BOA" },
+  { company: "Akima Facilities Operations", type: "ANC 8(a)", parent: "Akima / NANA", site: "Redstone Arsenal, AL", aor: "FORSCOM", value: 563, period: "2024–2034", status: "Active", vehicle: "Other" },
+  { company: "Vanquish Worldwide", type: "SDVOSB", parent: "Independent", site: "Fort Campbell, KY", aor: "NORTHCOM", value: 115, period: "2025–2030", status: "Active", vehicle: "EAGLE II BOA" },
+  { company: "Vanquish Worldwide", type: "SDVOSB", parent: "Independent", site: "Fort McCoy, WI", aor: "NORTHCOM", value: 58, period: "2025–2030", status: "Active", vehicle: "EAGLE II BOA" },
+  { company: "Vanquish Worldwide", type: "SDVOSB", parent: "Independent", site: "Fort Leonard Wood, MO", aor: "NORTHCOM", value: 35, period: "2024–2029", status: "Active", vehicle: "EAGLE II BOA" },
+  { company: "Vanquish Worldwide", type: "SDVOSB", parent: "Independent", site: "Fort Gregg-Adams / JB Langley-Eustis, VA", aor: "FORSCOM", value: 65, period: "2022–2027", status: "Active", vehicle: "EAGLE II BOA" },
+  { company: "Vanquish Worldwide", type: "SDVOSB", parent: "Independent", site: "Fort Rucker / Eglin AFB, FL", aor: "FORSCOM", value: null, period: "Ongoing", status: "Active", vehicle: "EAGLE II BOA" },
+  { company: "Vanquish Worldwide", type: "SDVOSB", parent: "Independent", site: "Fort Stewart / Hunter AAF, GA", aor: "FORSCOM", value: 65, period: "2022–2027", status: "Active", vehicle: "EAGLE II BOA" },
+  { company: "Vanquish Worldwide (sub)", type: "SDVOSB", parent: "Independent", site: "Fort Bragg, NC", aor: "FORSCOM", value: null, period: "Ongoing", status: "Active", vehicle: "EAGLE II BOA" },
+  { company: "Vanquish Worldwide (sub)", type: "SDVOSB", parent: "Independent", site: "Rock Island Arsenal, IL", aor: "NORTHCOM", value: null, period: "Ongoing", status: "Active", vehicle: "EAGLE II BOA" },
+  { company: "Chenega Base & Logistics Services", type: "ANC 8(a)", parent: "Chenega Corp.", site: "Fort Wainwright, AK + training areas", aor: "Multi", value: 220, period: "2023–2028", status: "Active", vehicle: "Other" },
+  { company: "Chenega Base & Logistics Services", type: "ANC 8(a)", parent: "Chenega Corp.", site: "INDOPACOM base ops (JBER area)", aor: "Multi", value: 110, period: "2024–2029", status: "Active", vehicle: "Other" },
+  { company: "Chenega Base & Logistics Services", type: "ANC 8(a)", parent: "Chenega Corp.", site: "EAGLE II BOA holder — sites TBD", aor: "Multi", value: null, period: "2023–2028", status: "BOA only", vehicle: "EAGLE II BOA" },
+  { company: "Marton Technologies", type: "Small Business", parent: "Panum Group LLC", site: "Fort Riley, KS", aor: "NORTHCOM", value: null, period: "Ongoing", status: "Active", vehicle: "EAGLE II BOA" },
+  { company: "Marton Technologies", type: "Small Business", parent: "Panum Group LLC", site: "Fort Bragg, NC", aor: "FORSCOM", value: null, period: "Ongoing", status: "Active", vehicle: "EAGLE II BOA" },
+  { company: "PD Systems", type: "SDVOSB", parent: "Independent", site: "JBLM, WA (incl. Yakima Training Ctr)", aor: "NORTHCOM", value: 28, period: "2018–2023", status: "Expiring", vehicle: "EAGLE II BOA" },
+  { company: "S&K Technologies", type: "Small Business", parent: "Confederated Salish & Kootenai Tribes", site: "BOA holder — CONUS/OCONUS", aor: "Multi", value: null, period: "Active BOA", status: "BOA only", vehicle: "Both" },
+  { company: "SOSi", type: "Small Business", parent: "Independent", site: "BOA holder — CONUS/OCONUS", aor: "Multi", value: null, period: "Active BOA", status: "BOA only", vehicle: "EAGLE II BOA" },
+  { company: "Cherokee Federal", type: "ANC 8(a)", parent: "Cherokee Nation Businesses", site: "BOA holder — CONUS/OCONUS", aor: "Multi", value: null, period: "Active BOA", status: "BOA only", vehicle: "EAGLE II BOA" },
+  { company: "V2X / Vectrus", type: "Small Business", parent: "V2X Inc. (NYSE: VVX)", site: "Fort Bragg, NC", aor: "FORSCOM", value: 593, period: "2016–2026", status: "Expiring", vehicle: "EAGLE BOA" },
+  { company: "V2X / Vectrus", type: "Small Business", parent: "V2X Inc. (NYSE: VVX)", site: "Fort Benning, GA", aor: "FORSCOM", value: 265, period: "2022–2026", status: "Expiring", vehicle: "EAGLE BOA" },
+];
+
+let sortCol = "value";
+let sortDir = -1;
+
+function getFilters() {
+  return {
+    search: document.getElementById("search").value.trim().toLowerCase(),
+    aor: document.getElementById("f-aor").value,
+    type: document.getElementById("f-type").value,
+    status: document.getElementById("f-status").value,
+    vehicle: document.getElementById("f-vehicle").value,
+  };
+}
+
+function badgeType(t) {
+  if (t === "ANC 8(a)") return `<span class="badge b-anc"><span class="badge-dot"></span>ANC 8(a)</span>`;
+  if (t === "SDVOSB") return `<span class="badge b-sdvosb"><span class="badge-dot"></span>SDVOSB</span>`;
+  return `<span class="badge b-sb"><span class="badge-dot"></span>${t}</span>`;
+}
+
+function statusBadge(s) {
+  if (s === "Active") return `<span class="status-badge s-active">Active</span>`;
+  if (s === "Expiring") return `<span class="status-badge s-expiring">Expiring</span>`;
+  return `<span class="status-badge s-boaonly">BOA only</span>`;
+}
+
+function aorCell(a) {
+  if (a === "NORTHCOM") return `<span class="aor-northcom">NORTHCOM</span>`;
+  return `<span class="aor-other">${a}</span>`;
+}
+
+function valueCell(v) {
+  if (v == null) return `<span class="val-na">Not disclosed</span>`;
+  const pct = Math.round((v / MAX_BAR_VAL) * 70);
+  return `<div class="val-wrap">
+    <div class="val-bar-bg"><div class="val-bar" style="width:${pct}px"></div></div>
+    <span class="val-text">$${v}M</span>
+  </div>`;
+}
+
+function vehicleTag(v) {
+  return `<span class="vehicle-tag">${v}</span>`;
+}
+
+function render() {
+  const f = getFilters();
+  let data = DATA.slice();
+
+  if (f.search) {
+    data = data.filter(r =>
+      r.company.toLowerCase().includes(f.search) ||
+      r.parent.toLowerCase().includes(f.search) ||
+      r.site.toLowerCase().includes(f.search) ||
+      r.aor.toLowerCase().includes(f.search)
+    );
+  }
+  if (f.aor) data = data.filter(r => r.aor === f.aor);
+  if (f.type) data = data.filter(r => r.type === f.type);
+  if (f.status) data = data.filter(r => r.status === f.status);
+  if (f.vehicle) data = data.filter(r => r.vehicle === f.vehicle);
+
+  data.sort((a, b) => {
+    let av = a[sortCol], bv = b[sortCol];
+    if (sortCol === "value") { av = av ?? -1; bv = bv ?? -1; }
+    if (av == null) av = "";
+    if (bv == null) bv = "";
+    if (typeof av === "string") av = av.toLowerCase();
+    if (typeof bv === "string") bv = bv.toLowerCase();
+    if (av < bv) return sortDir;
+    if (av > bv) return -sortDir;
+    return 0;
+  });
+
+  const tbody = document.getElementById("tbody");
+  if (data.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="9" class="empty-state">No records match current filters.</td></tr>`;
+  } else {
+    tbody.innerHTML = data.map(r => `
+      <tr>
+        <td>
+          <div class="company-name">${r.company}</div>
+        </td>
+        <td>${badgeType(r.type)}</td>
+        <td><span style="font-size:11px;color:var(--text-secondary);font-family:var(--mono);">${r.parent}</span></td>
+        <td><span style="font-size:12px;">${r.site}</span></td>
+        <td>${aorCell(r.aor)}</td>
+        <td>${valueCell(r.value)}</td>
+        <td><span style="font-family:var(--mono);font-size:11px;color:var(--text-secondary);">${r.period}</span></td>
+        <td>${statusBadge(r.status)}</td>
+        <td>${vehicleTag(r.vehicle)}</td>
+      </tr>
+    `).join("");
+  }
+
+  document.getElementById("row-count").textContent = `${data.length} / ${DATA.length} rows`;
+
+  const northcomCount = DATA.filter(r => r.aor === "NORTHCOM").length;
+  const disclosed = DATA.filter(r => r.value != null);
+  const totalVal = disclosed.reduce((s, r) => s + r.value, 0);
+  const firms = [...new Set(DATA.map(r => r.parent))].length;
+
+  document.getElementById("s-total").textContent = DATA.length;
+  document.getElementById("s-total-val").textContent = `$${totalVal.toLocaleString()}M`;
+  document.getElementById("s-northcom").textContent = northcomCount;
+  document.getElementById("s-firms").textContent = firms;
+}
+
+document.querySelectorAll("thead th[data-col]").forEach(th => {
+  th.addEventListener("click", () => {
+    const col = th.dataset.col;
+    if (sortCol === col) {
+      sortDir *= -1;
+    } else {
+      sortCol = col;
+      sortDir = col === "value" ? -1 : 1;
+    }
+    document.querySelectorAll("thead th").forEach(t => {
+      t.classList.remove("sorted");
+      t.querySelector(".sort-icon").textContent = "↕";
+    });
+    th.classList.add("sorted");
+    th.querySelector(".sort-icon").textContent = sortDir === -1 ? "↓" : "↑";
+    render();
+  });
+});
+
+["search","f-aor","f-type","f-status","f-vehicle"].forEach(id => {
+  const el = document.getElementById(id);
+  const evt = id === "search" ? "input" : "change";
+  el.addEventListener(evt, render);
+});
+
+document.getElementById("btn-reset").addEventListener("click", () => {
+  document.getElementById("search").value = "";
+  ["f-aor","f-type","f-status","f-vehicle"].forEach(id => {
+    document.getElementById(id).value = "";
+  });
+  sortCol = "value";
+  sortDir = -1;
+  document.querySelectorAll("thead th").forEach(t => {
+    t.classList.remove("sorted");
+    t.querySelector(".sort-icon").textContent = "↕";
+  });
+  const valTh = document.querySelector("thead th[data-col='value']");
+  valTh.classList.add("sorted");
+  valTh.querySelector(".sort-icon").textContent = "↓";
+  render();
+});
+
+const valTh = document.querySelector("thead th[data-col='value']");
+valTh.classList.add("sorted");
+render();
+</script>
+</body>
+</html>
